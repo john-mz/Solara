@@ -7,25 +7,27 @@ import { GrowattApi } from '../services/growattApi';
 export async function runSyncInventory() {
   console.log('Iniciando sincronización de inventario...');
   const batch = Collections.plants.firestore.batch();
+  let hasChanges = false;
 
+  // --- 1. Sincronizar Deye ---
   try {
-    // --- 1. Sincronizar Deye ---
     const deyePlantsRes = await DeyeApi.getPlants();
-    const deyePlants = deyePlantsRes.data?.list || [];
+    const deyePlants = deyePlantsRes.stationList || deyePlantsRes.data?.list || [];
     for (const p of deyePlants) {
       const plantId = `deye_${p.id}`;
       batch.set(Collections.plants.doc(plantId), {
         original_plant_id: String(p.id),
         brand: 'deye',
         name: p.name || 'Planta Deye',
-        location: p.location || '',
-        installed_capacity_kw: p.capacity || 0,
+        location: p.locationAddress || p.location || '',
+        installed_capacity_kw: p.installedCapacity || p.capacity || 0,
         created_at: new Date()
       }, { merge: true });
+      hasChanges = true;
 
       // Dispositivos Deye
-      const deyeDevicesRes = await DeyeApi.getDevices(p.id);
-      const deyeDevices = deyeDevicesRes.data?.list || [];
+      const deyeDevicesRes = await DeyeApi.getDevices(String(p.id));
+      const deyeDevices = deyeDevicesRes.deviceList || deyeDevicesRes.data?.list || [];
       for (const d of deyeDevices) {
         const deviceId = `deye_${d.device_sn}`;
         batch.set(Collections.devices.doc(deviceId), {
@@ -38,8 +40,12 @@ export async function runSyncInventory() {
         }, { merge: true });
       }
     }
+  } catch (error) {
+    console.error('Error sincronizando Deye:', error);
+  }
 
-    // --- 2. Sincronizar Huawei ---
+  // --- 2. Sincronizar Huawei ---
+  try {
     const huaweiPlantsRes = await HuaweiApi.getPlants();
     const huaweiPlants = huaweiPlantsRes.data || [];
     for (const p of huaweiPlants) {
@@ -52,6 +58,7 @@ export async function runSyncInventory() {
         installed_capacity_kw: p.capacity || 0,
         created_at: new Date()
       }, { merge: true });
+      hasChanges = true;
 
       // Dispositivos Huawei
       const huaweiDevicesRes = await HuaweiApi.getDevices(p.stationCode);
@@ -68,8 +75,12 @@ export async function runSyncInventory() {
         }, { merge: true });
       }
     }
+  } catch (error) {
+    console.error('Error sincronizando Huawei:', error);
+  }
 
-    // --- 3. Sincronizar Growatt ---
+  // --- 3. Sincronizar Growatt ---
+  try {
     const growattPlantsRes = await GrowattApi.getPlants();
     const growattPlants = growattPlantsRes.data?.plants || [];
     for (const p of growattPlants) {
@@ -82,6 +93,7 @@ export async function runSyncInventory() {
         installed_capacity_kw: p.nominalPower || 0,
         created_at: new Date()
       }, { merge: true });
+      hasChanges = true;
 
       // Dispositivos Growatt
       const growattDevicesRes = await GrowattApi.getDevices(p.plantId);
@@ -98,11 +110,19 @@ export async function runSyncInventory() {
         }, { merge: true });
       }
     }
-
-    await batch.commit();
-    console.log('Sincronización de inventario completada exitosamente.');
   } catch (error) {
-    console.error('Error durante la sincronización del inventario:', error);
+    console.error('Error sincronizando Growatt:', error);
+  }
+
+  if (hasChanges) {
+    try {
+      await batch.commit();
+      console.log('Sincronización de inventario completada exitosamente.');
+    } catch (error) {
+      console.error('Error al guardar en Firestore:', error);
+    }
+  } else {
+    console.log('Sincronización terminada sin datos nuevos para escribir.');
   }
 }
 

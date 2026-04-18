@@ -13,7 +13,13 @@ export async function fetchWithBackoff<T>(
 
   while (attempt < maxRetries) {
     try {
-      const response = await axios(config);
+      const response = await axios({
+        ...config,
+        headers: {
+          'Accept-Encoding': 'gzip, deflate',
+          ...config.headers
+        }
+      });
       return response;
     } catch (error: any) {
       const status = error.response?.status;

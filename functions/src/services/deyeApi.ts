@@ -6,10 +6,10 @@ const BASE_URL = `${config.API_BASE_URL}/deye`;
 export const DeyeApi = {
   async getPlants(pageNo = 1, pageSize = 100) {
     const response = await fetchWithBackoff<any>({
-      method: 'GET',
-      url: `${BASE_URL}/v1.0/plant/list`,
-      params: { page_no: pageNo, page_size: pageSize },
-      headers: { Authorization: config.API_KEY }
+      method: 'POST',
+      url: `${BASE_URL}/v1.0/station/list`,
+      data: { page: pageNo, size: pageSize },
+      headers: { Authorization: config.API_KEY, 'Content-Type': 'application/json' }
     });
     return response.data;
   },
@@ -18,7 +18,7 @@ export const DeyeApi = {
     const response = await fetchWithBackoff<any>({
       method: 'POST',
       url: `${BASE_URL}/v1.0/device/list`,
-      data: { plant_id: plantId, page: 1, size: 100 },
+      data: { page: 1, size: 100 },
       headers: { Authorization: config.API_KEY, 'Content-Type': 'application/json' }
     });
     return response.data;
