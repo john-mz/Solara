@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   collection,
@@ -16,7 +16,8 @@ import { mapAlarmDoc } from "@/lib/firestore-hooks";
 import type { AlarmDoc, AlarmSeverity, AlarmType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function alarmTypeLabel(type: AlarmType) {
+/** Labels for alarm types (shared with bell panel). */
+export function alarmTypeLabel(type: AlarmType) {
   switch (type) {
     case "DEVICE_OFFLINE":
       return "Dispositivo offline";
@@ -261,10 +262,12 @@ function showAlarmToast(alarm: AlarmDoc) {
 export function useAlarmWatcher() {
   const { session, authReady } = useAuth();
   const seenIdsRef = useRef<Set<string>>(new Set());
+  const [activeAlarms, setActiveAlarms] = useState<AlarmDoc[]>([]);
 
   useEffect(() => {
     if (!authReady || session === null) {
       seenIdsRef.current = new Set();
+      queueMicrotask(() => setActiveAlarms([]));
       return;
     }
 
@@ -279,6 +282,13 @@ export function useAlarmWatcher() {
     const unsub = onSnapshot(
       q,
       (snapshot) => {
+        const nextActive: AlarmDoc[] = [];
+        for (const docSnap of snapshot.docs) {
+          const alarm = mapAlarmDoc(docSnap.id, docSnap.data());
+          if (alarm && alarm.status === "ACTIVE") nextActive.push(alarm);
+        }
+        setActiveAlarms(nextActive);
+
         const skipToast = isFirstSnapshot;
 
         for (const docSnap of snapshot.docs) {
@@ -308,4 +318,6 @@ export function useAlarmWatcher() {
       seenIdsRef.current = new Set();
     };
   }, [authReady, session]);
+
+  return { activeAlarms };
 }

@@ -1,14 +1,18 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale/es";
+import { toast } from "sonner";
 import {
   dashboardSeverityCriticalDot,
   dashboardSeverityWarningDot,
 } from "@/lib/dashboard-chips";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AlarmSolutionModal } from "@/components/dashboard/alarmas/alarm-solution-modal";
+import { resolveAlarm } from "@/lib/firestore-hooks";
 import type { AlarmDoc, AlarmType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +32,23 @@ function alarmTypeLabel(type: AlarmType) {
     default:
       return type;
   }
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 6L9 17l-5-5" />
+    </svg>
+  );
 }
 
 function LightbulbIcon({ className }: { className?: string }) {
@@ -68,8 +89,26 @@ export function AlarmsTable({
   isFetchingNextPage,
   onLoadMore,
 }: AlarmsTableProps) {
+  const queryClient = useQueryClient();
   const showCount = !isLoading && !errorMessage && alarms.length > 0;
   const [solutionAlarm, setSolutionAlarm] = useState<AlarmDoc | null>(null);
+  const [popoverAlarmId, setPopoverAlarmId] = useState<string | null>(null);
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
+
+  async function handleResolve(alarmId: string) {
+    setResolvingId(alarmId);
+    try {
+      await resolveAlarm(alarmId);
+      toast.success("Alarma resuelta");
+      setPopoverAlarmId(null);
+      void queryClient.invalidateQueries({ queryKey: ["alarms"] });
+      void queryClient.invalidateQueries({ queryKey: ["alarm-kpis"] });
+    } catch {
+      toast.error("No se pudo marcar la alarma como resuelta");
+    } finally {
+      setResolvingId(null);
+    }
+  }
 
   return (
     <div
@@ -92,7 +131,7 @@ export function AlarmsTable({
 
       {/* Outer container: handles horizontal scroll for both header and body together */}
       <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
-        <div className="flex min-h-0 min-w-[720px] flex-1 flex-col text-xs sm:text-sm">
+        <div className="flex min-h-0 min-w-[760px] flex-1 flex-col text-xs sm:text-sm">
 
           {/* Column header — outside the vertical scroll area, never hidden by scrolling rows */}
           <table className="w-full table-fixed border-collapse text-left">
@@ -103,7 +142,7 @@ export function AlarmsTable({
               <col style={{ width: "150px" }} />
               <col style={{ width: "110px" }} />
               <col style={{ width: "140px" }} />
-              <col style={{ width: "56px" }} />
+              <col style={{ width: "96px" }} />
             </colgroup>
             <thead>
               <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
@@ -128,7 +167,7 @@ export function AlarmsTable({
                 <col style={{ width: "150px" }} />
                 <col style={{ width: "110px" }} />
                 <col style={{ width: "140px" }} />
-                <col style={{ width: "56px" }} />
+                <col style={{ width: "96px" }} />
               </colgroup>
               <tbody>
                 {isLoading ? (
@@ -140,7 +179,12 @@ export function AlarmsTable({
                       <td className="px-3 py-2.5"><Skeleton className="h-5 w-20" /></td>
                       <td className="px-3 py-2.5"><Skeleton className="h-5 w-16" /></td>
                       <td className="px-3 py-2.5"><Skeleton className="h-5 w-12" /></td>
-                      <td className="px-2 py-2.5"><Skeleton className="size-7" /></td>
+                      <td className="px-2 py-2.5">
+                        <div className="flex gap-1">
+                          <Skeleton className="size-7 shrink-0" />
+                          <Skeleton className="size-7 shrink-0" />
+                        </div>
+                      </td>
                     </tr>
                   ))
                 ) : errorMessage ? (
@@ -207,14 +251,59 @@ export function AlarmsTable({
                           </span>
                         </td>
                         <td className="px-2 py-2.5">
-                          <button
-                            type="button"
-                            onClick={() => setSolutionAlarm(a)}
-                            title="Ver solución sugerida"
-                            className="flex size-7 items-center justify-center rounded-lg border border-border/70 bg-background/50 text-accent transition-all hover:scale-110 hover:bg-accent/10 hover:text-accent active:scale-95"
-                          >
-                            <LightbulbIcon className="size-4" />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setSolutionAlarm(a)}
+                              title="Ver solución sugerida"
+                              className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/50 text-accent transition-all hover:scale-110 hover:bg-accent/10 hover:text-accent active:scale-95"
+                            >
+                              <LightbulbIcon className="size-4" />
+                            </button>
+                            <Popover
+                              open={popoverAlarmId === a.id}
+                              onOpenChange={(open) =>
+                                setPopoverAlarmId(open ? a.id : null)
+                              }
+                            >
+                              <PopoverTrigger asChild>
+                                <button
+                                  type="button"
+                                  title="Marcar como resuelta"
+                                  className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/50 text-emerald-700 transition-all hover:scale-110 hover:bg-emerald-500/15 hover:text-emerald-800 active:scale-95 dark:text-emerald-400 dark:hover:text-emerald-300"
+                                >
+                                  <CheckIcon className="size-4" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                align="end"
+                                className="w-56 p-3"
+                                onOpenAutoFocus={(e) => e.preventDefault()}
+                              >
+                                <p className="text-sm font-medium text-foreground">
+                                  ¿Marcar como resuelta?
+                                </p>
+                                <div className="mt-3 flex gap-2">
+                                  <button
+                                    type="button"
+                                    disabled={resolvingId === a.id}
+                                    onClick={() => void handleResolve(a.id)}
+                                    className="flex-1 rounded-lg bg-foreground py-2 text-xs font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+                                  >
+                                    {resolvingId === a.id ? "…" : "Resolver"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={resolvingId === a.id}
+                                    onClick={() => setPopoverAlarmId(null)}
+                                    className="rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-xs font-medium text-foreground hover:bg-background/90 disabled:opacity-50"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
                         </td>
                       </tr>
                     );

@@ -328,7 +328,7 @@ export function PlantDashboard({ plant, onBack }: PlantDashboardProps) {
         transition={{ duration: 0.3 }}
       >
         <div className="min-w-0 space-y-1">
-          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-primary/70">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-muted-foreground">
             Mi instalación
           </p>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

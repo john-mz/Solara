@@ -1,7 +1,7 @@
 "use client";
 
 import "@/lib/firebase";
-import { AlarmNotifier } from "@/components/alarm-notifier";
+import { AlarmProvider } from "@/components/providers/alarm-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
@@ -36,8 +36,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AlarmNotifier />
-        {children}
+        <AlarmProvider>{children}</AlarmProvider>
         <AppToaster />
       </AuthProvider>
     </QueryClientProvider>

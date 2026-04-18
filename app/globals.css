@@ -109,6 +109,51 @@ h1, h2, h3, h4, h5, h6 {
   html {
     @apply bg-background font-sans;
   }
+
+  /* Consistent pointer on interactive controls (links, native buttons, Radix roles). */
+  a[href] {
+    @apply cursor-pointer;
+  }
+  button:not(:disabled) {
+    @apply cursor-pointer;
+  }
+  [role="button"]:not([aria-disabled="true"]) {
+    @apply cursor-pointer;
+  }
+  [role="tab"]:not([aria-disabled="true"]) {
+    @apply cursor-pointer;
+  }
+  [role="menuitem"],
+  [role="menuitemcheckbox"],
+  [role="menuitemradio"] {
+    @apply cursor-pointer;
+  }
+  [role="link"] {
+    @apply cursor-pointer;
+  }
+  [role="option"] {
+    @apply cursor-pointer;
+  }
+  summary {
+    @apply cursor-pointer;
+  }
+  select:not(:disabled) {
+    @apply cursor-pointer;
+  }
+  label:has(select) {
+    @apply cursor-pointer;
+  }
+  [role="combobox"]:not([aria-disabled="true"]) {
+    @apply cursor-pointer;
+  }
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"],
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
 }
 
 @layer utilities {

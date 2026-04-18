@@ -8,12 +8,14 @@ import {
 import {
   Timestamp,
   collection,
+  doc,
   getCountFromServer,
   getDocs,
   limit,
   orderBy,
   query,
   startAfter,
+  updateDoc,
   where,
   type DocumentData,
   type QueryDocumentSnapshot,
@@ -169,6 +171,14 @@ export function mapAlarmDoc(docId: string, data: DocumentData): AlarmDoc | null 
         : {}),
     },
   };
+}
+
+/** Marca una alarma como resuelta en Firestore. */
+export async function resolveAlarm(alarmId: string): Promise<void> {
+  await updateDoc(doc(db, "alarms", alarmId), {
+    status: "RESOLVED",
+    resolved_at: Timestamp.now(),
+  });
 }
 
 function isDeviceType(v: unknown): v is DeviceDoc["type"] {
