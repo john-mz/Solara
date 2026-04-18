@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReportesTabs } from "@/components/dashboard/reportes/reportes-tabs";
 import {
-  useFrequencyAlarmsForMonth,
   useMonthlySummaries,
   usePlants,
 } from "@/lib/firestore-hooks";
@@ -28,10 +27,8 @@ export default function ReportesPage() {
 
   const summariesQuery = useMonthlySummaries(year, monthIndex);
   const plantsQuery = usePlants("ALL");
-  const freqQuery = useFrequencyAlarmsForMonth(year, monthIndex);
 
-  const loading =
-    summariesQuery.isLoading || plantsQuery.isLoading || freqQuery.isLoading;
+  const loading = summariesQuery.isLoading || plantsQuery.isLoading;
 
   return (
     <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-5 pb-20 sm:pb-5">
@@ -68,7 +65,6 @@ export default function ReportesPage() {
         <ReportesTabs
           summaries={summariesQuery.data ?? []}
           plants={plantsQuery.data ?? []}
-          frequencyAlarms={freqQuery.data ?? []}
           monthLabel={monthLabel}
           daysInSample={daysInSample}
           year={year}

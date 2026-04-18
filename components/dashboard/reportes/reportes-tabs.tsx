@@ -3,11 +3,10 @@
 import { useMemo, useState } from "react";
 import { PlantReportModal } from "@/components/dashboard/reportes/plant-report-modal";
 import {
-  dashboardChipDanger,
   dashboardFilterPillActive,
   dashboardFilterPillInactive,
 } from "@/lib/dashboard-chips";
-import type { AlarmDoc, DailySummaryDoc, PlantDoc } from "@/lib/types";
+import type { DailySummaryDoc, PlantDoc } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const cardPaper =
@@ -33,8 +32,6 @@ const copFormatter = new Intl.NumberFormat("es-CO", {
 const TABS = [
   { id: "gen", label: "Generación" },
   { id: "co2", label: "CO₂" },
-  { id: "contract", label: "Contractual" },
-  { id: "freq", label: "Frecuencia" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -47,7 +44,6 @@ function treesEquivalent(tonsCo2: number) {
 export type ReportesTabsProps = {
   summaries: DailySummaryDoc[];
   plants: PlantDoc[];
-  frequencyAlarms: AlarmDoc[];
   monthLabel: string;
   daysInSample: number;
   year: number;
@@ -57,7 +53,6 @@ export type ReportesTabsProps = {
 export function ReportesTabs({
   summaries,
   plants,
-  frequencyAlarms,
   monthLabel,
   daysInSample,
   year,
@@ -118,52 +113,6 @@ export function ReportesTabs({
       .map((row, i) => ({ ...row, rank: i + 1 }));
   }, [aggregates.co2]);
 
-  const contractual = useMemo(() => {
-    const rows: {
-      plant_id: string;
-      generated: number;
-      expected: number;
-      deltaPct: number;
-    }[] = [];
-    for (const p of plants) {
-      const expected = p.contract_commitments?.expected_energy_kwh_month;
-      if (expected == null || expected <= 0) continue;
-      const generated = aggregates.energy.get(p.id) ?? 0;
-      if (generated >= expected) continue;
-      const deltaPct = ((generated - expected) / expected) * 100;
-      rows.push({ plant_id: p.id, generated, expected, deltaPct });
-    }
-    rows.sort((a, b) => a.deltaPct - b.deltaPct);
-    return rows;
-  }, [plants, aggregates.energy]);
-
-  const freqByPlant = useMemo(() => {
-    const counts = new Map<
-      string,
-      { count: number; worst: number; last: Date | null }
-    >();
-    for (const a of frequencyAlarms) {
-      const pid = a.plant_id;
-      const cur = counts.get(pid) ?? {
-        count: 0,
-        worst: 0,
-        last: null as Date | null,
-      };
-      cur.count += 1;
-      const read = a.details?.reading_value;
-      if (typeof read === "number") {
-        const dev = Math.abs(read - 60);
-        if (dev > Math.abs(cur.worst - 60)) cur.worst = read;
-      }
-      const t = a.created_at.toDate();
-      if (!cur.last || t > cur.last) cur.last = t;
-      counts.set(pid, cur);
-    }
-    return [...counts.entries()]
-      .map(([plant_id, v]) => ({ plant_id, ...v }))
-      .sort((a, b) => b.count - a.count);
-  }, [frequencyAlarms]);
-
   const headerTotals = useMemo(() => {
     let gen = 0;
     let co2t = 0;
@@ -173,15 +122,15 @@ export function ReportesTabs({
       co2t += s.co2_mitigated_tons;
       money += s.financial_savings;
     }
-    return { gen, co2t, money, breach: contractual.length };
-  }, [summaries, contractual.length]);
+    return { gen, co2t, money };
+  }, [summaries]);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden">
       <div
         className={cn(
           cardPaper,
-          "grid shrink-0 grid-cols-2 gap-x-6 gap-y-3 px-4 py-3 sm:grid-cols-4"
+          "grid shrink-0 grid-cols-2 gap-x-6 gap-y-3 px-4 py-3 sm:grid-cols-3"
         )}
       >
         <div className="min-w-0">
@@ -205,12 +154,6 @@ export function ReportesTabs({
           <p className="text-xs text-muted-foreground">Ahorro total</p>
           <p className="mt-0.5 font-semibold tabular-nums text-foreground sm:text-lg">
             {copFormatter.format(headerTotals.money)}
-          </p>
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Plantas en incumplimiento</p>
-          <p className="mt-0.5 font-semibold tabular-nums text-foreground sm:text-lg">
-            {intFormatter.format(headerTotals.breach)}
           </p>
         </div>
       </div>
@@ -360,170 +303,6 @@ export function ReportesTabs({
                         </td>
                       </tr>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Tab: Contractual ── */}
-        {tab === "contract" && (
-          <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
-            <div className="flex min-h-0 min-w-[680px] flex-1 flex-col text-xs sm:text-sm">
-              <table className="w-full table-fixed border-collapse text-left">
-                <colgroup>
-                  <col />
-                  <col style={{ width: "120px" }} />
-                  <col style={{ width: "120px" }} />
-                  <col style={{ width: "72px" }} />
-                  <col style={{ width: "120px" }} />
-                  <col style={{ width: "110px" }} />
-                </colgroup>
-                <thead>
-                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-foreground/75">
-                    <th className="px-3 py-3">Planta</th>
-                    <th className="px-3 py-3">Generado (mes)</th>
-                    <th className="px-3 py-3">Esperado</th>
-                    <th className="px-3 py-3">Δ %</th>
-                    <th className="px-3 py-3">Estado</th>
-                    <th className="px-2 py-3 text-right">Acción</th>
-                  </tr>
-                </thead>
-              </table>
-              <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
-                <table className="w-full table-fixed border-collapse text-left">
-                  <colgroup>
-                    <col />
-                    <col style={{ width: "120px" }} />
-                    <col style={{ width: "120px" }} />
-                    <col style={{ width: "72px" }} />
-                    <col style={{ width: "120px" }} />
-                    <col style={{ width: "110px" }} />
-                  </colgroup>
-                  <tbody>
-                    {contractual.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-3 py-6 text-center text-foreground/75">
-                          Ninguna planta con compromiso mensual por debajo del mínimo (o sin datos de contrato).
-                        </td>
-                      </tr>
-                    ) : (
-                      contractual.map((r) => (
-                        <tr key={r.plant_id} className="border-t border-white/10 hover:bg-white/[0.06]">
-                          <td className="px-3 py-2.5 font-medium text-foreground">
-                            {plantName.get(r.plant_id) ?? r.plant_id}
-                          </td>
-                          <td className="px-3 py-2.5 tabular-nums text-foreground">{metricFormatter.format(r.generated)} kWh</td>
-                          <td className="px-3 py-2.5 tabular-nums text-foreground/85">
-                            {metricFormatter.format(r.expected)} kWh
-                          </td>
-                          <td className="px-3 py-2.5 tabular-nums text-destructive">
-                            {metricFormatter.format(r.deltaPct)}%
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <span className={cn("rounded-full px-2 py-0.5 text-[0.65rem] font-semibold", dashboardChipDanger)}>
-                              INCUMPLIMIENTO
-                            </span>
-                          </td>
-                          <td className="px-2 py-2.5 text-right">
-                            <button
-                              type="button"
-                              className={reportActionBtnClass}
-                              onClick={() =>
-                                setOpenPlant({
-                                  id: r.plant_id,
-                                  name: plantName.get(r.plant_id) ?? r.plant_id,
-                                })
-                              }
-                            >
-                              Ver reporte
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Tab: Frecuencia ── */}
-        {tab === "freq" && (
-          <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
-            <div className="flex min-h-0 min-w-[700px] flex-1 flex-col text-xs sm:text-sm">
-              <table className="w-full table-fixed border-collapse text-left">
-                <colgroup>
-                  <col style={{ width: "40px" }} />
-                  <col />
-                  <col style={{ width: "140px" }} />
-                  <col style={{ width: "88px" }} />
-                  <col style={{ width: "140px" }} />
-                  <col style={{ width: "110px" }} />
-                </colgroup>
-                <thead>
-                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-foreground/75">
-                    <th className="px-3 py-3">#</th>
-                    <th className="px-3 py-3">Planta</th>
-                    <th className="px-3 py-3">Desviaciones (mes)</th>
-                    <th className="px-3 py-3">Peor Hz</th>
-                    <th className="px-3 py-3">Último incidente</th>
-                    <th className="px-2 py-3 text-right">Acción</th>
-                  </tr>
-                </thead>
-              </table>
-              <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
-                <table className="w-full table-fixed border-collapse text-left">
-                  <colgroup>
-                    <col style={{ width: "40px" }} />
-                    <col />
-                    <col style={{ width: "140px" }} />
-                    <col style={{ width: "88px" }} />
-                    <col style={{ width: "140px" }} />
-                    <col style={{ width: "110px" }} />
-                  </colgroup>
-                  <tbody>
-                    {freqByPlant.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-3 py-6 text-center text-foreground/75">
-                          Sin alarmas de frecuencia en el período.
-                        </td>
-                      </tr>
-                    ) : (
-                      freqByPlant.map((r, i) => (
-                        <tr key={r.plant_id} className="border-t border-white/10 hover:bg-white/[0.06]">
-                          <td className="px-3 py-2.5 text-foreground/65">{i + 1}</td>
-                          <td className="px-3 py-2.5 font-medium text-foreground">
-                            {plantName.get(r.plant_id) ?? r.plant_id}
-                          </td>
-                          <td className="px-3 py-2.5 tabular-nums text-foreground">{r.count}</td>
-                          <td className="px-3 py-2.5 tabular-nums text-destructive">
-                            {r.worst ? `${metricFormatter.format(r.worst)} Hz` : "—"}
-                          </td>
-                          <td className="px-3 py-2.5 text-foreground/85">
-                            {r.last
-                              ? r.last.toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })
-                              : "—"}
-                          </td>
-                          <td className="px-2 py-2.5 text-right">
-                            <button
-                              type="button"
-                              className={reportActionBtnClass}
-                              onClick={() =>
-                                setOpenPlant({
-                                  id: r.plant_id,
-                                  name: plantName.get(r.plant_id) ?? r.plant_id,
-                                })
-                              }
-                            >
-                              Ver reporte
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
                   </tbody>
                 </table>
               </div>

@@ -31,6 +31,23 @@ function alarmTypeLabel(type: AlarmType) {
   }
 }
 
+function alarmTypeDescription(type: AlarmType): string {
+  switch (type) {
+    case "DEVICE_OFFLINE":
+      return "El dispositivo dejó de responder";
+    case "FREQUENCY_OUT_OF_RANGE":
+      return "La frecuencia salió del rango admitido";
+    case "VOLTAGE_OUT_OF_RANGE":
+      return "El voltaje salió del rango admitido";
+    case "LOW_GENERATION":
+      return "La generación está por debajo del umbral";
+    default:
+      return "Revisa el panel de alarmas";
+  }
+}
+
+// ─── Audio ────────────────────────────────────────────────────────────────────
+
 let sharedAudioContext: AudioContext | null = null;
 
 function getAudioContext(): AudioContext | null {
@@ -45,96 +62,197 @@ function getAudioContext(): AudioContext | null {
   }
 }
 
-/** 3-pulse beep — louder for CRITICAL */
+/**
+ * Synthesized alert sequence using Web Audio API.
+ * CRITICAL: 5 rising-tone pulses over ~2 s, high gain.
+ * WARNING:  3 steady pulses over ~1.2 s, moderate gain.
+ */
 export function playAlertSound(severity: AlarmSeverity) {
   const ctx = getAudioContext();
   if (!ctx) return;
   if (ctx.state === "suspended") {
-    void ctx.resume().catch(() => {
-      /* autoplay may block until user gesture */
-    });
+    void ctx.resume().catch(() => undefined);
   }
 
-  const baseFreq = severity === "CRITICAL" ? 920 : 640;
-  const gainPeak = severity === "CRITICAL" ? 0.42 : 0.28;
-  const pulses = severity === "CRITICAL" ? 4 : 3;
-  const spacing = 0.2;
+  const isCritical = severity === "CRITICAL";
+  const pulses = isCritical ? 5 : 3;
+  const spacing = isCritical ? 0.38 : 0.42;
+  const pulseDuration = 0.22;
+  const gainPeak = isCritical ? 0.55 : 0.32;
 
   for (let i = 0; i < pulses; i++) {
-    const start = ctx.currentTime + i * spacing;
+    const t = ctx.currentTime + i * spacing;
+
+    // Main tone — frequency rises slightly each pulse for CRITICAL
     const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(baseFreq, start);
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(gainPeak, start + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.12);
-    osc.start(start);
-    osc.stop(start + 0.13);
+    const gainNode = ctx.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    osc.type = isCritical ? "sawtooth" : "sine";
+    osc.frequency.setValueAtTime(
+      isCritical ? 880 + i * 60 : 660,
+      t
+    );
+    gainNode.gain.setValueAtTime(0.0001, t);
+    gainNode.gain.exponentialRampToValueAtTime(gainPeak, t + 0.02);
+    gainNode.gain.setValueAtTime(gainPeak, t + pulseDuration * 0.6);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, t + pulseDuration);
+    osc.start(t);
+    osc.stop(t + pulseDuration + 0.01);
+
+    // Sub-tone one octave lower for body
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    sub.connect(subGain);
+    subGain.connect(ctx.destination);
+    sub.type = "sine";
+    sub.frequency.setValueAtTime(
+      isCritical ? (880 + i * 60) / 2 : 330,
+      t
+    );
+    subGain.gain.setValueAtTime(0.0001, t);
+    subGain.gain.exponentialRampToValueAtTime(gainPeak * 0.35, t + 0.025);
+    subGain.gain.exponentialRampToValueAtTime(0.0001, t + pulseDuration);
+    sub.start(t);
+    sub.stop(t + pulseDuration + 0.01);
   }
 }
 
-function AlarmToastContent({ alarm }: { alarm: AlarmDoc }) {
+// ─── Toast UI ─────────────────────────────────────────────────────────────────
+
+function CriticalIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path
+        fillRule="evenodd"
+        d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+function WarningIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path
+        fillRule="evenodd"
+        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+function AlarmToastContent({ alarm, toastId }: { alarm: AlarmDoc; toastId: string | number }) {
   const critical = alarm.severity === "CRITICAL";
+
   return (
     <div
       className={cn(
-        "pointer-events-auto flex w-[min(100vw-2rem,24rem)] flex-col gap-2 rounded-lg border-l-4 p-4 shadow-2xl",
-        critical
-          ? "animate-pulse border-l-red-600 bg-red-50 ring-2 ring-red-400/80 dark:bg-red-950/90 dark:ring-red-500/60"
-          : "border-l-amber-500 bg-amber-50 ring-1 ring-amber-300/70 dark:bg-amber-950/80 dark:ring-amber-500/50"
+        "pointer-events-auto flex w-[min(100vw-2rem,26rem)] flex-col overflow-hidden rounded-[var(--radius-xl)]",
+        "border border-white/30 bg-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.14)] backdrop-blur-xl"
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl" aria-hidden>
-            {critical ? "🚨" : "⚠️"}
-          </span>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-300">
-              Nueva alerta
-            </p>
-            <p className="font-semibold text-neutral-900 dark:text-neutral-50">
-              {alarmTypeLabel(alarm.type)}
-            </p>
-          </div>
-        </div>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-3">
         <span
           className={cn(
-            "shrink-0 rounded px-2 py-0.5 text-[10px] font-bold uppercase",
+            "flex size-8 shrink-0 items-center justify-center rounded-full",
             critical
-              ? "bg-red-600 text-white"
-              : "bg-amber-500 text-white"
+              ? "bg-red-100 text-red-700"
+              : "bg-amber-100 text-amber-700"
+          )}
+        >
+          {critical
+            ? <CriticalIcon className="size-4" />
+            : <WarningIcon className="size-4" />
+          }
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground">
+            Nueva alarma
+          </p>
+          <p className="truncate text-sm font-bold leading-tight text-foreground">
+            {alarmTypeLabel(alarm.type)}
+          </p>
+        </div>
+
+        <span
+          className={cn(
+            "shrink-0 rounded-full border px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider",
+            critical
+              ? "border-red-800/55 bg-red-100 text-red-950"
+              : "border-amber-800/45 bg-amber-100 text-amber-950"
           )}
         >
           {alarm.severity}
         </span>
+
+        <button
+          type="button"
+          onClick={() => toast.dismiss(toastId)}
+          aria-label="Cerrar alerta"
+          className="ml-1 flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/10 hover:text-foreground"
+        >
+          <svg viewBox="0 0 16 16" fill="currentColor" className="size-3.5" aria-hidden>
+            <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z" />
+          </svg>
+        </button>
       </div>
-      <p className="text-sm text-neutral-700 dark:text-neutral-200">
-        Dispositivo:{" "}
-        <span className="font-mono text-xs">{alarm.device_id}</span>
-      </p>
-      <Link
-        href="/dashboard/alarmas"
-        className={cn(
-          "inline-flex w-fit items-center rounded-md px-3 py-1.5 text-sm font-semibold text-white",
-          critical ? "bg-red-600 hover:bg-red-700" : "bg-amber-600 hover:bg-amber-700"
-        )}
-      >
-        Ver alarmas
-      </Link>
+
+      {/* Divider */}
+      <div className="mx-4 border-t border-black/8" />
+
+      {/* Body */}
+      <div className="flex flex-col gap-2.5 px-4 py-3">
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {alarmTypeDescription(alarm.type)}
+        </p>
+
+        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[0.68rem]">
+          <span className="font-semibold uppercase tracking-wide text-muted-foreground/70">Dispositivo</span>
+          <span className="truncate font-mono text-foreground">{alarm.device_id || "—"}</span>
+          <span className="font-semibold uppercase tracking-wide text-muted-foreground/70">Planta</span>
+          <span className="truncate font-mono text-foreground">{alarm.plant_id || "—"}</span>
+        </div>
+
+        <Link
+          href="/dashboard/alarmas"
+          onClick={() => toast.dismiss(toastId)}
+          className={cn(
+            "mt-0.5 inline-flex w-full items-center justify-center rounded-lg border py-2 text-sm font-semibold transition-opacity hover:opacity-85",
+            critical
+              ? "border-red-800/55 bg-red-100 text-red-950"
+              : "border-amber-800/45 bg-amber-100 text-amber-950"
+          )}
+        >
+          Ver alarmas
+        </Link>
+      </div>
     </div>
   );
 }
 
 function showAlarmToast(alarm: AlarmDoc) {
-  toast.custom(() => <AlarmToastContent alarm={alarm} />, {
-    duration: 15_000,
-    closeButton: true,
-  });
+  toast.custom(
+    (t) => <AlarmToastContent alarm={alarm} toastId={t} />,
+    { duration: 18_000 }
+  );
 }
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 /**
  * Escucha alarmas ACTIVE en tiempo real y muestra toast + sonido para documentos nuevos

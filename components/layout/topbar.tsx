@@ -19,7 +19,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const OWNER_NAV = [
   { href: "/dashboard/alarmas", label: "Alarmas" },
   { href: "/dashboard/plantas", label: "Plantas" },
-  { href: "/dashboard/dispositivos", label: "Dispositivos" },
   { href: "/dashboard/reportes", label: "Reportes" },
 ] as const;
 

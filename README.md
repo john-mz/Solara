@@ -51,8 +51,7 @@ La app tiene dos modos de acceso desde la pantalla de login:
 ## Vistas del admin
 
 - **Alarmas** — Alarmas activas en tiempo real con filtros: todas, críticas, offline >5min, por planta
-- **Plantas** — Listado con filtro por marca y toggle de SLA comprometido
-- **Dispositivos** — Búsqueda de planta → tabla de dispositivos → panel con telemetría en tiempo real
+- **Plantas** — Listado con filtro por marca y toggle de SLA comprometido; en el detalle de cada planta: inventario de dispositivos (tabla + panel de telemetría en tiempo real)
 - **Reportes** — Rankings mensuales: generación total, CO₂ mitigado, cumplimiento contractual, desviaciones de frecuencia
 
 ## Vista del cliente

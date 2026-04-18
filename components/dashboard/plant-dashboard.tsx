@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   differenceInCalendarDays,
@@ -25,13 +25,19 @@ import {
 } from "recharts";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { DevicePanel } from "@/components/dashboard/dispositivos/device-panel";
+import { DispositivosTable } from "@/components/dashboard/dispositivos/dispositivos-table";
 import { fetchDailySummaries, type DailySummaryRow } from "@/lib/plant-queries";
+import {
+  useDevices,
+  useLatestTelemetryForDevices,
+} from "@/lib/firestore-hooks";
 import {
   dashboardBrandBadgeClass,
   dashboardSegmentedActive,
   dashboardSegmentedInactive,
 } from "@/lib/dashboard-chips";
-import type { PlantDoc } from "@/lib/types";
+import type { PlantDoc, TelemetryDoc } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -209,6 +215,26 @@ type PlantDashboardProps = {
 
 export function PlantDashboard({ plant, onBack }: PlantDashboardProps) {
   const [range, setRange] = useState<PlantRangeKey>("month");
+  const [deviceType, setDeviceType] = useState<
+    "inverter" | "microinverter" | "ALL"
+  >("ALL");
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
+  const [panelErrorsOnly, setPanelErrorsOnly] = useState(false);
+
+  const devicesQuery = useDevices(plant.id, deviceType);
+  const devices = useMemo(
+    () => devicesQuery.data ?? [],
+    [devicesQuery.data]
+  );
+  const deviceIds = useMemo(() => devices.map((d) => d.id), [devices]);
+  const latestQuery = useLatestTelemetryForDevices(deviceIds);
+  const latestByDeviceId = useMemo((): Map<string, TelemetryDoc> => {
+    return latestQuery.data ?? new Map();
+  }, [latestQuery.data]);
+
+  const selectedDevice =
+    devices.find((d) => d.id === selectedDeviceId) ?? null;
+
   const bounds = getRangeBounds(range);
   const daysInRange = daysInInclusiveRange(bounds.start, bounds.end);
 
@@ -281,7 +307,7 @@ export function PlantDashboard({ plant, onBack }: PlantDashboardProps) {
   }
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-20 sm:pb-5">
+    <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-20 sm:pb-5">
       {onBack ? (
         <div className="sticky top-0 z-10 -mx-5 border-b border-white/10 bg-background/80 px-5 py-3 backdrop-blur-md sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
           <Button
@@ -746,6 +772,58 @@ export function PlantDashboard({ plant, onBack }: PlantDashboardProps) {
           </div>
         </div>
       </motion.div>
+
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        className="mt-3 flex shrink-0 flex-col gap-2"
+        initial={{ opacity: 0, y: 8 }}
+        transition={{ duration: 0.35, delay: 0.18 }}
+      >
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-foreground/70">
+              Inventario
+            </p>
+            <h2 className="text-sm font-semibold tracking-tight text-foreground sm:text-base">
+              Dispositivos
+            </h2>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Tipo</span>
+            <select
+              value={deviceType}
+              onChange={(e) => {
+                setDeviceType(
+                  e.target.value as "inverter" | "microinverter" | "ALL"
+                );
+                setSelectedDeviceId(null);
+              }}
+              className="rounded-[var(--radius-lg)] border border-white/20 bg-white/15 px-3 py-2 text-sm text-foreground backdrop-blur-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="ALL">Todos</option>
+              <option value="inverter">Inverter</option>
+              <option value="microinverter">Microinverter</option>
+            </select>
+          </label>
+        </div>
+        <div className="flex min-h-[280px] min-w-0 flex-col">
+          <DispositivosTable
+            devices={devices}
+            latestByDeviceId={latestByDeviceId}
+            selectedId={selectedDeviceId}
+            onSelect={setSelectedDeviceId}
+            isLoading={devicesQuery.isLoading || latestQuery.isLoading}
+          />
+        </div>
+      </motion.div>
+
+      <DevicePanel
+        open={Boolean(selectedDeviceId && selectedDevice)}
+        device={selectedDevice}
+        errorsOnly={panelErrorsOnly}
+        onErrorsOnlyChange={setPanelErrorsOnly}
+        onClose={() => setSelectedDeviceId(null)}
+      />
     </main>
   );
 }
