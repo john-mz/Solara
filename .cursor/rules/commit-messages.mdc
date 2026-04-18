@@ -1,0 +1,17 @@
+---
+description: >-
+  Generar mensajes de commit según el repo. Usar cuando pidan commit message,
+  mensaje de commit, sugerencia de commit, conventional commits, título de PR
+  alineado a commits, o texto para git commit.
+alwaysApply: false
+---
+
+# Mensajes de commit
+
+Cuando el usuario pida **generar, sugerir o revisar** un mensaje de commit (o un título de PR con el mismo criterio que los commits):
+
+1. **Leer primero** `CONTRIBUTING.md` en la raíz del repositorio (sección de commits y, si aplica, PRs).
+2. **Aplicar** el formato y tipos que definan ahí (p. ej. Conventional Commits, longitud de la primera línea, idioma, cuerpo con viñetas).
+3. Si hace falta contexto del cambio, usar `git status` o el diff que el usuario comparta; no inventar alcance que no corresponda al working tree.
+
+Si `CONTRIBUTING.md` no existiera o no cubriera commits, usar Conventional Commits en español, primera línea ≤72 caracteres, y cuerpo opcional con viñetas.
