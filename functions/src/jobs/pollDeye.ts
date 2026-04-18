@@ -18,9 +18,10 @@ export const pollDeyeTelemetry = onSchedule('*/2 * * * *', async (event) => {
     const device = doc.data();
     try {
       const res = await DeyeApi.getRealTimeData(device.original_id);
-      
-      // Normalización de datos Deye a nuestro modelo
-      const kpis = res.data; // asumiendo que los datos vienen en res.data
+
+      // getRealTimeData ya retorna response.data, así que res es el body completo.
+      // Los KPIs vienen en res.data según la estructura de la API de Deye.
+      const kpis = res?.data;
       let status: 'ONLINE' | 'OFFLINE' | 'ERROR' = 'ONLINE';
       
       if (kpis?.work_status === 'offline') status = 'OFFLINE';
@@ -35,8 +36,17 @@ export const pollDeyeTelemetry = onSchedule('*/2 * * * *', async (event) => {
       };
 
       await evaluateRulesAndStore(doc.id, device.plant_id, telemetry);
-    } catch (error) {
-      console.error(`Error al procesar telemetría del dispositivo Deye ${device.original_id}:`, error);
+    } catch (error: any) {
+      // Si el dispositivo no existe en la API (404), es probable que sea un SN de mock data.
+      // Logueamos una advertencia y continuamos con el siguiente dispositivo.
+      if (error?.response?.status === 404 || error?.code === 'ERR_BAD_REQUEST') {
+        console.warn(
+          `[WARN] Dispositivo Deye con SN "${device.original_id}" no encontrado en la API (404). ` +
+          `Puede ser un SN de datos mock. Saltando...`
+        );
+      } else {
+        console.error(`Error al procesar telemetría del dispositivo Deye ${device.original_id}:`, error);
+      }
       // No detenemos el bucle, continuamos con el siguiente dispositivo
     }
   }
