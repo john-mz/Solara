@@ -46,7 +46,7 @@ export default function RootLayout({
         "bg-background font-sans"
       )}
     >
-      <body className="flex h-screen min-h-0 flex-col overflow-hidden">
+      <body className="flex h-screen min-h-0 flex-col overflow-hidden" suppressHydrationWarning>
         <AppProviders>
           <ConditionalTopbar />
           {children}
