@@ -30,6 +30,7 @@ export async function analyzeInvoicePdf(pdfBuffer: Buffer): Promise<any> {
 Analiza la factura de energía adjunta (PDF) y extrae la siguiente información.
 
 Ubicación de las variables en el documento:
+- name: Sección "SUSCRIPTOR/DATOS TECNICOS". Es la primera línea de esta sección.
 - total_factura: Sección arriba a la derecha. Valor de "Total".
 - total_energia: Sección arriba a la derecha. Valor de "Energía".
 - rangos: En la sección "liquidación del consumo actual" hay una tabla, cada registro es un rango (ej. 0-173 y >173).
@@ -46,6 +47,7 @@ Ubicación de las variables en el documento:
 
 Genera un JSON válido siguiendo esta estructura exacta:
 {
+  "name": "...",
   "total_factura": "...",
   "total_energia": "...",
   "rangos": [
