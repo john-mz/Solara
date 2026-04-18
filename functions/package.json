@@ -10,7 +10,8 @@
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "backfill": "tsx scripts/backfillHistory.ts"
   },
   "engines": {
     "node": "20"
@@ -24,6 +25,7 @@
   "devDependencies": {
     "firebase-functions-test": "^3.1.0",
     "firebase-tools": "^15.15.0",
+    "tsx": "^4.19.3",
     "typescript": "^5.3.3"
   },
   "private": true

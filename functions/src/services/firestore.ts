@@ -12,5 +12,6 @@ export const Collections = {
   plants: db.collection('plants'),
   devices: db.collection('devices'),
   alarms: db.collection('alarms'),
-  dailySummaries: db.collection('daily_summaries')
+  dailySummaries: db.collection('daily_summaries'),
+  monthlySummaries: db.collection('monthly_summaries'),
 };
