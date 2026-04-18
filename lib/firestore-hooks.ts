@@ -35,6 +35,38 @@ import type {
 
 const ALARMS_PAGE = 20;
 
+/** TanStack Query cache tiers aligned with Cloud Functions write cadence */
+const STALE = {
+  /** Alarms + telemetry — poll jobs run every minute */
+  LIVE: 30_000,
+  /** Device list metadata — inventory sync is daily */
+  DEVICE: 5 * 60_000,
+  /** Plants — inventory sync is daily */
+  PLANT: 10 * 60_000,
+  /** Past daily/monthly summaries — immutable after aggregation */
+  HISTORY: Infinity,
+  /** Today / current month — may update until daily job at 23:55 */
+  TODAY: 5 * 60_000,
+} as const;
+
+/** Mirrors telemetry polling interval (1 min) */
+const REFETCH_LIVE = 60_000;
+
+export function getTodayDateString() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function summaryStaleTime(dateStr: string): number {
+  return dateStr === getTodayDateString() ? STALE.TODAY : STALE.HISTORY;
+}
+
+function monthlyStaleTime(year: number, monthIndex0: number): number {
+  const now = new Date();
+  return now.getFullYear() === year && now.getMonth() === monthIndex0
+    ? STALE.TODAY
+    : STALE.HISTORY;
+}
+
 function isPlantBrand(value: unknown): value is PlantBrand {
   return value === "deye" || value === "huawei" || value === "growatt";
 }
@@ -280,6 +312,8 @@ export function useAlarms(filter: AlarmsFilter, enabled = true) {
   return useInfiniteQuery({
     queryKey: ["alarms", filter] as const,
     enabled,
+    staleTime: STALE.LIVE,
+    refetchInterval: REFETCH_LIVE,
     initialPageParam: undefined as QueryDocumentSnapshot | undefined,
     queryFn: async ({ pageParam }) => fetchAlarmsPage(filter, pageParam),
     getNextPageParam: (lastPage) => {
@@ -308,6 +342,8 @@ export type AlarmKpis = {
 export function useAlarmKpis() {
   return useQuery({
     queryKey: ["alarm-kpis"],
+    staleTime: STALE.LIVE,
+    refetchInterval: REFETCH_LIVE,
     queryFn: async (): Promise<AlarmKpis> => {
       const alarmsRef = collection(db, "alarms");
       const [totalSnap, critSnap, offSnap] = await Promise.all([
@@ -354,6 +390,7 @@ export function useAlarmKpis() {
 export function usePlants(brand: PlantBrand | "ALL") {
   return useQuery({
     queryKey: ["plants", brand],
+    staleTime: STALE.PLANT,
     queryFn: async (): Promise<PlantDoc[]> => {
       const plantsRef = collection(db, "plants");
       const qy =
@@ -377,7 +414,7 @@ export function usePlants(brand: PlantBrand | "ALL") {
 export function useAllPlantsForSearch() {
   return useQuery({
     queryKey: ["plants-all-search"],
-    staleTime: 5 * 60_000,
+    staleTime: STALE.PLANT,
     queryFn: async (): Promise<PlantDoc[]> => {
       const snap = await getDocs(
         query(collection(db, "plants"), orderBy("name"))
@@ -395,13 +432,10 @@ export function useAllPlantsForSearch() {
   });
 }
 
-export function getTodayDateString() {
-  return new Date().toISOString().split("T")[0];
-}
-
 export function useDailySummariesForDate(dateStr: string) {
   return useQuery({
     queryKey: ["daily-summaries-date", dateStr],
+    staleTime: summaryStaleTime(dateStr),
     queryFn: async (): Promise<DailySummaryDoc[]> => {
       const snap = await getDocs(
         query(
@@ -420,6 +454,7 @@ export function useDailySummariesForDate(dateStr: string) {
 export function useSlaBreachedSummaries(dateStr: string) {
   return useQuery({
     queryKey: ["daily-summaries-sla", dateStr],
+    staleTime: summaryStaleTime(dateStr),
     queryFn: async (): Promise<DailySummaryDoc[]> => {
       const snap = await getDocs(
         query(
@@ -442,6 +477,7 @@ export function useDevices(
   return useQuery({
     queryKey: ["devices", plantId, deviceType],
     enabled: Boolean(plantId),
+    staleTime: STALE.DEVICE,
     queryFn: async (): Promise<DeviceDoc[]> => {
       if (!plantId) return [];
       const devRef = collection(db, "devices");
@@ -469,6 +505,8 @@ export function useDeviceTelemetry(
   return useQuery({
     queryKey: ["telemetry", deviceId, errorsOnly],
     enabled: Boolean(deviceId),
+    staleTime: STALE.LIVE,
+    refetchInterval: REFETCH_LIVE,
     queryFn: async (): Promise<TelemetryDoc[]> => {
       if (!deviceId) return [];
       const telRef = collection(db, "devices", deviceId, "telemetry");
@@ -493,6 +531,8 @@ export function useLatestTelemetryForDevices(deviceIds: string[]) {
   return useQuery({
     queryKey: ["latest-telemetry-batch", ...deviceIds.sort()],
     enabled: deviceIds.length > 0,
+    staleTime: STALE.LIVE,
+    refetchInterval: REFETCH_LIVE,
     queryFn: async (): Promise<Map<string, TelemetryDoc>> => {
       const map = new Map<string, TelemetryDoc>();
       await Promise.all(
@@ -532,6 +572,7 @@ export function useMonthlySummaries(year: number, monthIndex0: number) {
   const { startStr, endStr } = monthBounds(year, monthIndex0);
   return useQuery({
     queryKey: ["monthly-summaries", startStr, endStr],
+    staleTime: monthlyStaleTime(year, monthIndex0),
     queryFn: async (): Promise<DailySummaryDoc[]> => {
       const snap = await getDocs(
         query(
@@ -557,8 +598,14 @@ export function useFrequencyAlarmsForMonth(
   const startTs = Timestamp.fromDate(start);
   const endTs = Timestamp.fromDate(end);
 
+  const now = new Date();
+  const isCurrentMonth =
+    now.getFullYear() === year && now.getMonth() === monthIndex0;
+
   return useQuery({
     queryKey: ["alarms-frequency-month", year, monthIndex0],
+    staleTime: monthlyStaleTime(year, monthIndex0),
+    refetchInterval: isCurrentMonth ? REFETCH_LIVE : false,
     queryFn: async (): Promise<AlarmDoc[]> => {
       const snap = await getDocs(
         query(
@@ -585,6 +632,7 @@ export async function fetchPlantsCount(): Promise<number> {
 export function usePlantsCount() {
   return useQuery({
     queryKey: ["plants-count"],
+    staleTime: STALE.PLANT,
     queryFn: fetchPlantsCount,
   });
 }
