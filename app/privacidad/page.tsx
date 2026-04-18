@@ -25,7 +25,7 @@ export default function PrivacyPolicyPage() {
               </span>
             </div>
           </div>
-          <Link href="/" className="text-primary hover:text-primary/80 text-sm font-medium flex items-center transition-colors">
+          <Link href="/login" className="text-primary hover:text-primary/80 text-sm font-medium flex items-center transition-colors">
             &larr; Volver al inicio
           </Link>
         </div>
