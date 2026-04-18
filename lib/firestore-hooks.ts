@@ -115,7 +115,7 @@ function isAlarmType(v: unknown): v is AlarmType {
   return typeof v === "string" && ALARM_TYPES.includes(v as AlarmType);
 }
 
-function mapAlarmDoc(docId: string, data: DocumentData): AlarmDoc | null {
+export function mapAlarmDoc(docId: string, data: DocumentData): AlarmDoc | null {
   const typeRaw = data.type ?? data.rule_type;
   if (!isAlarmType(typeRaw)) return null;
 
@@ -450,7 +450,7 @@ export function useDailySummariesForDate(dateStr: string) {
   });
 }
 
-/** Plants with avg_uptime_percent < 99.5 for a given date */
+/** Plants with avg_uptime_percent < 90 for a given date */
 export function useSlaBreachedSummaries(dateStr: string) {
   return useQuery({
     queryKey: ["daily-summaries-sla", dateStr],
@@ -460,7 +460,7 @@ export function useSlaBreachedSummaries(dateStr: string) {
         query(
           collection(db, "daily_summaries"),
           where("date", "==", dateStr),
-          where("avg_uptime_percent", "<", 99.5)
+          where("avg_uptime_percent", "<", 90)
         )
       );
       return snap.docs

@@ -33,7 +33,7 @@ function statusPill(uptime: number | undefined) {
       className: dashboardChipOnline,
     };
   }
-  if (uptime >= 95) {
+  if (uptime >= 90) {
     return {
       label: "Advertencia",
       className: dashboardChipWarning,

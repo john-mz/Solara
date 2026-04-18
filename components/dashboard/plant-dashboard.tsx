@@ -119,14 +119,14 @@ function performanceRatioPercent(
 }
 
 function uptimeToneClass(pct: number) {
-  if (pct >= 99.5) return "text-emerald-900 dark:text-emerald-200";
-  if (pct >= 98) return "text-amber-900 dark:text-amber-200";
+  if (pct >= 99.5) return "text-emerald-800 dark:text-emerald-500";
+  if (pct >= 90) return "text-amber-800 dark:text-amber-500";
   return "text-destructive";
 }
 
 function uptimeBarClass(pct: number) {
   if (pct >= 99.5) return "bg-emerald-800 dark:bg-emerald-500";
-  if (pct >= 98) return "bg-amber-800 dark:bg-amber-500";
+  if (pct >= 90) return "bg-amber-800 dark:bg-amber-500";
   return "bg-destructive";
 }
 
