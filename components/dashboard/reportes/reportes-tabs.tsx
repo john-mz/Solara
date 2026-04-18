@@ -14,7 +14,7 @@ const cardPaper =
   "border border-white/18 bg-white/10 shadow-[0_2px_18px_rgb(0,0,0,0.035)] backdrop-blur-md rounded-[var(--radius-xl)]";
 
 const reportActionBtnClass =
-  "rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-[0.65rem] font-semibold tracking-wide text-foreground hover:bg-white/18";
+  "cursor-pointer rounded-full border border-foreground/25 bg-foreground/10 px-2.5 py-1 text-[0.65rem] font-semibold tracking-wide text-foreground shadow-sm transition-colors duration-150 hover:bg-foreground/[0.15]";
 
 const metricFormatter = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 2,
@@ -228,7 +228,7 @@ export function ReportesTabs({
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
             className={cn(
-              "rounded-full px-3 py-1.5 text-xs font-medium sm:text-sm",
+              "cursor-pointer rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 sm:text-sm",
               tab === t.id ? dashboardFilterPillActive : dashboardFilterPillInactive
             )}
           >
@@ -252,7 +252,7 @@ export function ReportesTabs({
                   <col style={{ width: "110px" }} />
                 </colgroup>
                 <thead>
-                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
+                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-foreground/75">
                     <th className="px-3 py-3">#</th>
                     <th className="px-3 py-3">Planta</th>
                     <th className="px-3 py-3">Total kWh mes</th>
@@ -273,12 +273,12 @@ export function ReportesTabs({
                   <tbody>
                     {rankingGen.map((r) => (
                       <tr key={r.plant_id} className="border-t border-white/10 hover:bg-white/[0.06]">
-                        <td className="px-3 py-2.5 tabular-nums text-muted-foreground">{r.rank}</td>
+                        <td className="px-3 py-2.5 tabular-nums text-foreground/65">{r.rank}</td>
                         <td className="px-3 py-2.5 font-medium text-foreground">
                           {plantName.get(r.plant_id) ?? r.plant_id}
                         </td>
-                        <td className="px-3 py-2.5 tabular-nums">{metricFormatter.format(r.total_kwh)}</td>
-                        <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
+                        <td className="px-3 py-2.5 tabular-nums text-foreground">{metricFormatter.format(r.total_kwh)}</td>
+                        <td className="px-3 py-2.5 tabular-nums text-foreground/90">
                           {metricFormatter.format(r.avg_per_day)}
                         </td>
                         <td className="px-2 py-2.5 text-right">
@@ -317,7 +317,7 @@ export function ReportesTabs({
                   <col style={{ width: "110px" }} />
                 </colgroup>
                 <thead>
-                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
+                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-foreground/75">
                     <th className="px-3 py-3">#</th>
                     <th className="px-3 py-3">Planta</th>
                     <th className="px-3 py-3">CO₂ (t)</th>
@@ -338,12 +338,12 @@ export function ReportesTabs({
                   <tbody>
                     {rankingCo2.map((r) => (
                       <tr key={r.plant_id} className="border-t border-white/10 hover:bg-white/[0.06]">
-                        <td className="px-3 py-2.5 tabular-nums text-muted-foreground">{r.rank}</td>
+                        <td className="px-3 py-2.5 tabular-nums text-foreground/65">{r.rank}</td>
                         <td className="px-3 py-2.5 font-medium text-foreground">
                           {plantName.get(r.plant_id) ?? r.plant_id}
                         </td>
-                        <td className="px-3 py-2.5 tabular-nums">{metricFormatter.format(r.tons)}</td>
-                        <td className="px-3 py-2.5 text-muted-foreground">{treesEquivalent(r.tons)}</td>
+                        <td className="px-3 py-2.5 tabular-nums text-foreground">{metricFormatter.format(r.tons)}</td>
+                        <td className="px-3 py-2.5 text-foreground/85">{treesEquivalent(r.tons)}</td>
                         <td className="px-2 py-2.5 text-right">
                           <button
                             type="button"
@@ -381,7 +381,7 @@ export function ReportesTabs({
                   <col style={{ width: "110px" }} />
                 </colgroup>
                 <thead>
-                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
+                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-foreground/75">
                     <th className="px-3 py-3">Planta</th>
                     <th className="px-3 py-3">Generado (mes)</th>
                     <th className="px-3 py-3">Esperado</th>
@@ -404,7 +404,7 @@ export function ReportesTabs({
                   <tbody>
                     {contractual.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
+                        <td colSpan={6} className="px-3 py-6 text-center text-foreground/75">
                           Ninguna planta con compromiso mensual por debajo del mínimo (o sin datos de contrato).
                         </td>
                       </tr>
@@ -414,8 +414,8 @@ export function ReportesTabs({
                           <td className="px-3 py-2.5 font-medium text-foreground">
                             {plantName.get(r.plant_id) ?? r.plant_id}
                           </td>
-                          <td className="px-3 py-2.5 tabular-nums">{metricFormatter.format(r.generated)} kWh</td>
-                          <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
+                          <td className="px-3 py-2.5 tabular-nums text-foreground">{metricFormatter.format(r.generated)} kWh</td>
+                          <td className="px-3 py-2.5 tabular-nums text-foreground/85">
                             {metricFormatter.format(r.expected)} kWh
                           </td>
                           <td className="px-3 py-2.5 tabular-nums text-destructive">
@@ -464,7 +464,7 @@ export function ReportesTabs({
                   <col style={{ width: "110px" }} />
                 </colgroup>
                 <thead>
-                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
+                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-foreground/75">
                     <th className="px-3 py-3">#</th>
                     <th className="px-3 py-3">Planta</th>
                     <th className="px-3 py-3">Desviaciones (mes)</th>
@@ -487,22 +487,22 @@ export function ReportesTabs({
                   <tbody>
                     {freqByPlant.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
+                        <td colSpan={6} className="px-3 py-6 text-center text-foreground/75">
                           Sin alarmas de frecuencia en el período.
                         </td>
                       </tr>
                     ) : (
                       freqByPlant.map((r, i) => (
                         <tr key={r.plant_id} className="border-t border-white/10 hover:bg-white/[0.06]">
-                          <td className="px-3 py-2.5 text-muted-foreground">{i + 1}</td>
+                          <td className="px-3 py-2.5 text-foreground/65">{i + 1}</td>
                           <td className="px-3 py-2.5 font-medium text-foreground">
                             {plantName.get(r.plant_id) ?? r.plant_id}
                           </td>
-                          <td className="px-3 py-2.5 tabular-nums">{r.count}</td>
+                          <td className="px-3 py-2.5 tabular-nums text-foreground">{r.count}</td>
                           <td className="px-3 py-2.5 tabular-nums text-destructive">
                             {r.worst ? `${metricFormatter.format(r.worst)} Hz` : "—"}
                           </td>
-                          <td className="px-3 py-2.5 text-muted-foreground">
+                          <td className="px-3 py-2.5 text-foreground/85">
                             {r.last
                               ? r.last.toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })
                               : "—"}
