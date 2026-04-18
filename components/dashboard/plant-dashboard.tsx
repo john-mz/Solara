@@ -204,9 +204,10 @@ export function illustrationFor(kw: number): { src: string; alt: string } {
 
 type PlantDashboardProps = {
   plant: PlantDoc;
+  onBack?: () => void;
 };
 
-export function PlantDashboard({ plant }: PlantDashboardProps) {
+export function PlantDashboard({ plant, onBack }: PlantDashboardProps) {
   const [range, setRange] = useState<PlantRangeKey>("month");
   const bounds = getRangeBounds(range);
   const daysInRange = daysInInclusiveRange(bounds.start, bounds.end);
@@ -242,6 +243,19 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
   if (summariesQuery.isLoading && !summariesQuery.data) {
     return (
       <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-20 sm:pb-5">
+        {onBack ? (
+          <div className="sticky top-0 z-10 -mx-5 border-b border-white/10 bg-background/80 px-5 py-3 backdrop-blur-md sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="-ml-2 gap-1 text-muted-foreground hover:text-foreground"
+              onClick={onBack}
+            >
+              ← Volver
+            </Button>
+          </div>
+        ) : null}
         <div className="flex shrink-0 flex-col gap-3 py-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-2">
             <Skeleton className="h-3 w-24 rounded-md" />
@@ -268,6 +282,19 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
 
   return (
     <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-20 sm:pb-5">
+      {onBack ? (
+        <div className="sticky top-0 z-10 -mx-5 border-b border-white/10 bg-background/80 px-5 py-3 backdrop-blur-md sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="-ml-2 gap-1 text-muted-foreground hover:text-foreground"
+            onClick={onBack}
+          >
+            ← Volver
+          </Button>
+        </div>
+      ) : null}
       <motion.div
         animate={{ opacity: 1, y: 0 }}
         className="flex shrink-0 flex-col gap-3 py-4 sm:flex-row sm:items-end sm:justify-between"

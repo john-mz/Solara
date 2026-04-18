@@ -117,19 +117,6 @@ export default function PlantaDetallePage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="sticky top-0 z-10 shrink-0 border-b border-white/10 bg-background/80 px-5 py-3 backdrop-blur-md sm:static sm:border-0 sm:bg-transparent sm:px-5 sm:py-3 sm:backdrop-blur-none">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="-ml-2 gap-1 text-muted-foreground hover:text-foreground"
-          onClick={handleBack}
-        >
-          ← Volver
-        </Button>
-      </div>
-      <PlantDashboard plant={plantQuery.data} />
-    </div>
+    <PlantDashboard plant={plantQuery.data} onBack={handleBack} />
   );
 }
