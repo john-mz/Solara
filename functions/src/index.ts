@@ -2,6 +2,7 @@
 export { syncInventoryCron } from './jobs/syncInventory';
 export { syncInventoryManual } from './api/syncInventoryManual';
 export { seedMockData } from './api/seedMockData';
+export { analyzeInvoice } from './api/analyzeInvoice';
 
 // Funciones de polling en tiempo real (Telemetría y Alarmas)
 export { pollDeyeTelemetry } from './jobs/pollDeye';
