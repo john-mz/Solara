@@ -253,7 +253,7 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
   }
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-20 md:overflow-hidden sm:pb-5">
+    <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-20 sm:pb-5">
       <motion.div
         animate={{ opacity: 1, y: 0 }}
         className="flex shrink-0 flex-col gap-3 py-4 sm:flex-row sm:items-end sm:justify-between"
@@ -323,12 +323,12 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
       </motion.div>
 
       {/* 3-column × 2-row main grid — mirrors overview layout */}
-      <div className="grid w-full grid-cols-1 gap-3 md:min-h-0 md:flex-1 md:grid-cols-[1fr_1.5fr_1fr] md:grid-rows-2">
+      <div className="grid w-full grid-cols-1 gap-3 md:grid-cols-[1fr_1.5fr_1fr] md:grid-rows-[minmax(160px,auto)_minmax(160px,auto)]">
 
         {/* Row 1, Col 1 — C1 Energía & ahorro */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className={cn(cardPaper, "flex min-h-[160px] min-w-0 flex-col gap-2 p-4 md:min-h-0")}
+          className={cn(cardPaper, "flex min-h-[160px] min-w-0 flex-col gap-2 p-4 md:min-h-[160px]")}
           initial={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.35 }}
         >
@@ -348,7 +348,7 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
             </span>
           </p>
           <div className="mt-auto h-12 min-h-0 w-full">
-            {sparklinePoints.length > 0 ? (
+            {sparklinePoints.length > 1 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={sparklinePoints}
@@ -366,10 +366,20 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
                     stroke="var(--color-chart-1)"
                     strokeWidth={2}
                     fill="url(#sparkEnergy)"
-                    isAnimationActive={false}
+                    animationDuration={700}
                   />
                 </AreaChart>
               </ResponsiveContainer>
+            ) : sparklinePoints.length === 1 ? (
+              <div className="flex h-full items-center gap-2">
+                <span
+                  className="inline-block h-3 w-3 rounded-full"
+                  style={{ background: "var(--color-chart-1)" }}
+                />
+                <span className="text-xs font-medium tabular-nums text-foreground">
+                  {metricFormatter.format(sparklinePoints[0].total_energy_kwh)} kWh hoy
+                </span>
+              </div>
             ) : (
               <p className="text-[0.7rem] text-muted-foreground">Sin datos en este rango</p>
             )}
@@ -379,7 +389,7 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
         {/* Row 1, Col 2 — Illustration (no card, bottom fade) */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="relative flex h-48 min-w-0 flex-col md:h-auto md:min-h-0 md:flex-1"
+          className="relative flex h-48 min-w-0 flex-col md:h-auto md:min-h-[180px] md:flex-1"
           initial={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.35, delay: 0.05 }}
         >
@@ -403,7 +413,7 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
         {/* Row 1, Col 3 — C2 Uptime */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className={cn(cardPaper, "flex min-h-[160px] min-w-0 flex-col gap-3 p-4 md:min-h-0")}
+          className={cn(cardPaper, "flex min-h-[160px] min-w-0 flex-col gap-3 p-4 md:min-h-[160px]")}
           initial={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.35, delay: 0.04 }}
         >
@@ -423,9 +433,11 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
             Promedio del rango · objetivo típico ≥ 99,5 %
           </p>
           <div className="mt-auto h-2 w-full overflow-hidden rounded-full bg-white/15">
-            <div
-              className={cn("h-full rounded-full transition-all", uptimeBarClass(avgUptime))}
-              style={{ width: `${Math.min(100, Math.max(0, avgUptime))}%` }}
+            <motion.div
+              className={cn("h-full rounded-full", uptimeBarClass(avgUptime))}
+              initial={{ width: "0%" }}
+              animate={{ width: `${Math.min(100, Math.max(0, avgUptime))}%` }}
+              transition={{ duration: 0.9, ease: "easeOut", delay: 0.1 }}
             />
           </div>
         </motion.div>
@@ -433,7 +445,7 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
         {/* Row 2, Col 1 — C3 Performance ratio */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className={cn(cardPaper, "flex min-h-[160px] min-w-0 flex-col gap-2 p-4 md:min-h-0")}
+          className={cn(cardPaper, "flex min-h-[160px] min-w-0 flex-col gap-2 p-4 md:min-h-[160px]")}
           initial={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.35, delay: 0.08 }}
         >
@@ -462,17 +474,21 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
                     <span>{metricFormatter.format(targetPr)} % meta</span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-white/15">
-                    <div
+                    <motion.div
                       className="h-full rounded-full bg-primary"
-                      style={{ width: `${Math.min(100, (pr / targetPr) * 100)}%` }}
+                      initial={{ width: "0%" }}
+                      animate={{ width: `${Math.min(100, (pr / targetPr) * 100)}%` }}
+                      transition={{ duration: 0.9, ease: "easeOut", delay: 0.1 }}
                     />
                   </div>
                 </div>
               ) : (
                 <div className="mt-auto h-2 w-full rounded-full bg-white/15">
-                  <div
+                  <motion.div
                     className="h-full rounded-full bg-[var(--color-chart-1)]"
-                    style={{ width: `${Math.min(100, pr)}%` }}
+                    initial={{ width: "0%" }}
+                    animate={{ width: `${Math.min(100, pr)}%` }}
+                    transition={{ duration: 0.9, ease: "easeOut", delay: 0.1 }}
                   />
                 </div>
               )}
@@ -507,7 +523,7 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
             </p>
           </div>
           <div className="min-h-0 flex-1">
-            {chartPoints.length > 0 ? (
+            {chartPoints.length > 1 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={chartPoints}
@@ -559,6 +575,17 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
                   />
                 </AreaChart>
               </ResponsiveContainer>
+            ) : chartPoints.length === 1 ? (
+              <div className="flex h-full min-h-[8rem] flex-col items-center justify-center gap-1">
+                <p
+                  className="font-[family-name:var(--font-heading)] text-3xl font-semibold tabular-nums tracking-tight"
+                  style={{ color: "var(--color-chart-1)" }}
+                >
+                  {metricFormatter.format(chartPoints[0].total_energy_kwh)}
+                  <span className="ml-1 text-base font-normal text-muted-foreground">kWh</span>
+                </p>
+                <p className="text-xs text-muted-foreground">{chartPoints[0].label}</p>
+              </div>
             ) : (
               <div className="flex h-full min-h-[8rem] items-center justify-center text-sm text-muted-foreground">
                 Sin datos en daily_summaries para este rango.
@@ -570,7 +597,7 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
         {/* Row 2, Col 3 — C4 CO₂ */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className={cn(cardPaper, "flex min-h-[160px] min-w-0 flex-col gap-2 p-4 md:min-h-0")}
+          className={cn(cardPaper, "flex min-h-[160px] min-w-0 flex-col gap-2 p-4 md:min-h-[160px]")}
           initial={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.35, delay: 0.14 }}
         >
@@ -593,7 +620,7 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
         animate={{ opacity: 1, y: 0 }}
         className={cn(
           cardPaper,
-          "mt-3 flex max-h-[min(40vh,320px)] min-h-[140px] flex-col gap-2 overflow-hidden p-4"
+          "mt-3 flex h-[220px] flex-col gap-2 overflow-hidden p-4"
         )}
         initial={{ opacity: 0, y: 8 }}
         transition={{ duration: 0.35, delay: 0.16 }}
