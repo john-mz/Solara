@@ -65,7 +65,46 @@ Estas funciones son responsables de garantizar el SLA de < 5 minutos para detecc
 
 ---
 
-## 4. Instrucciones de Ejecución y Despliegue
+## 4. Funciones de Soporte y Análisis (Cotización)
+
+### `analyzeInvoice`
+- **Tipo:** Cloud Function HTTP (`onRequest`)
+- **Método:** `POST`
+- **Endpoint:** `https://<region>-<project-id>.cloudfunctions.net/analyzeInvoice`
+  - *Ejemplo (us-central1):* `https://us-central1-hackathon-cursor.cloudfunctions.net/analyzeInvoice`
+- **Descripción:** Automatiza el proceso de obtención y análisis de facturas de la EEP. Resuelve el captcha, descarga el PDF y extrae datos estructurados mediante IA.
+
+#### Request (Payload)
+```json
+{
+  "num_matricula": "1847440"
+}
+```
+
+#### Response (Ejemplo)
+```json
+{
+  "success": true,
+  "data": {
+    "total_factura": "150.000",
+    "total_energia": "120.000",
+    "rangos": [...],
+    "consumo_pasado": [...]
+  },
+  "execution_time_ms": 12450
+}
+```
+
+#### Ejemplo con `curl`
+```bash
+curl -X POST "https://us-central1-hackathon-cursor.cloudfunctions.net/analyzeInvoice" \
+     -H "Content-Type: application/json" \
+     -d '{"num_matricula": "1847440"}'
+```
+
+---
+
+## 5. Instrucciones de Ejecución y Despliegue
 
 ### Requisitos Previos
 - Tener instalado Node.js (versión 20 recomendada).
