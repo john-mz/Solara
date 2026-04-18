@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { PlantReportModal } from "@/components/dashboard/reportes/plant-report-modal";
 import {
   dashboardChipDanger,
   dashboardFilterPillActive,
@@ -11,6 +12,9 @@ import { cn } from "@/lib/utils";
 
 const cardPaper =
   "border border-white/18 bg-white/10 shadow-[0_2px_18px_rgb(0,0,0,0.035)] backdrop-blur-md rounded-[var(--radius-xl)]";
+
+const reportActionBtnClass =
+  "rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-[0.65rem] font-semibold tracking-wide text-foreground hover:bg-white/18";
 
 const metricFormatter = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 2,
@@ -46,6 +50,8 @@ export type ReportesTabsProps = {
   frequencyAlarms: AlarmDoc[];
   monthLabel: string;
   daysInSample: number;
+  year: number;
+  monthIndex: number;
 };
 
 export function ReportesTabs({
@@ -54,8 +60,24 @@ export function ReportesTabs({
   frequencyAlarms,
   monthLabel,
   daysInSample,
+  year,
+  monthIndex,
 }: ReportesTabsProps) {
   const [tab, setTab] = useState<TabId>("gen");
+  const [openPlant, setOpenPlant] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const openPlantSummaries = useMemo(() => {
+    if (!openPlant) return [];
+    return summaries.filter((s) => s.plant_id === openPlant.id);
+  }, [summaries, openPlant]);
+
+  const openPlantDoc = useMemo(() => {
+    if (!openPlant) return null;
+    return plants.find((p) => p.id === openPlant.id) ?? null;
+  }, [plants, openPlant]);
 
   const plantName = useMemo(() => {
     const m = new Map<string, string>();
@@ -220,13 +242,14 @@ export function ReportesTabs({
         {/* ── Tab: Generación ── */}
         {tab === "gen" && (
           <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
-            <div className="flex min-h-0 min-w-[520px] flex-1 flex-col text-xs sm:text-sm">
+            <div className="flex min-h-0 min-w-[640px] flex-1 flex-col text-xs sm:text-sm">
               <table className="w-full table-fixed border-collapse text-left">
                 <colgroup>
                   <col style={{ width: "40px" }} />
                   <col />
                   <col style={{ width: "140px" }} />
                   <col style={{ width: "140px" }} />
+                  <col style={{ width: "110px" }} />
                 </colgroup>
                 <thead>
                   <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
@@ -234,6 +257,7 @@ export function ReportesTabs({
                     <th className="px-3 py-3">Planta</th>
                     <th className="px-3 py-3">Total kWh mes</th>
                     <th className="px-3 py-3">Prom. kWh/día</th>
+                    <th className="px-2 py-3 text-right">Acción</th>
                   </tr>
                 </thead>
               </table>
@@ -244,6 +268,7 @@ export function ReportesTabs({
                     <col />
                     <col style={{ width: "140px" }} />
                     <col style={{ width: "140px" }} />
+                    <col style={{ width: "110px" }} />
                   </colgroup>
                   <tbody>
                     {rankingGen.map((r) => (
@@ -255,6 +280,20 @@ export function ReportesTabs({
                         <td className="px-3 py-2.5 tabular-nums">{metricFormatter.format(r.total_kwh)}</td>
                         <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
                           {metricFormatter.format(r.avg_per_day)}
+                        </td>
+                        <td className="px-2 py-2.5 text-right">
+                          <button
+                            type="button"
+                            className={reportActionBtnClass}
+                            onClick={() =>
+                              setOpenPlant({
+                                id: r.plant_id,
+                                name: plantName.get(r.plant_id) ?? r.plant_id,
+                              })
+                            }
+                          >
+                            Ver reporte
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -268,13 +307,14 @@ export function ReportesTabs({
         {/* ── Tab: CO₂ ── */}
         {tab === "co2" && (
           <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
-            <div className="flex min-h-0 min-w-[520px] flex-1 flex-col text-xs sm:text-sm">
+            <div className="flex min-h-0 min-w-[640px] flex-1 flex-col text-xs sm:text-sm">
               <table className="w-full table-fixed border-collapse text-left">
                 <colgroup>
                   <col style={{ width: "40px" }} />
                   <col />
                   <col style={{ width: "120px" }} />
-                  <col style={{ width: "180px" }} />
+                  <col style={{ width: "160px" }} />
+                  <col style={{ width: "110px" }} />
                 </colgroup>
                 <thead>
                   <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
@@ -282,6 +322,7 @@ export function ReportesTabs({
                     <th className="px-3 py-3">Planta</th>
                     <th className="px-3 py-3">CO₂ (t)</th>
                     <th className="px-3 py-3">Equivalente</th>
+                    <th className="px-2 py-3 text-right">Acción</th>
                   </tr>
                 </thead>
               </table>
@@ -291,7 +332,8 @@ export function ReportesTabs({
                     <col style={{ width: "40px" }} />
                     <col />
                     <col style={{ width: "120px" }} />
-                    <col style={{ width: "180px" }} />
+                    <col style={{ width: "160px" }} />
+                    <col style={{ width: "110px" }} />
                   </colgroup>
                   <tbody>
                     {rankingCo2.map((r) => (
@@ -302,6 +344,20 @@ export function ReportesTabs({
                         </td>
                         <td className="px-3 py-2.5 tabular-nums">{metricFormatter.format(r.tons)}</td>
                         <td className="px-3 py-2.5 text-muted-foreground">{treesEquivalent(r.tons)}</td>
+                        <td className="px-2 py-2.5 text-right">
+                          <button
+                            type="button"
+                            className={reportActionBtnClass}
+                            onClick={() =>
+                              setOpenPlant({
+                                id: r.plant_id,
+                                name: plantName.get(r.plant_id) ?? r.plant_id,
+                              })
+                            }
+                          >
+                            Ver reporte
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -314,14 +370,15 @@ export function ReportesTabs({
         {/* ── Tab: Contractual ── */}
         {tab === "contract" && (
           <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
-            <div className="flex min-h-0 min-w-[560px] flex-1 flex-col text-xs sm:text-sm">
+            <div className="flex min-h-0 min-w-[680px] flex-1 flex-col text-xs sm:text-sm">
               <table className="w-full table-fixed border-collapse text-left">
                 <colgroup>
                   <col />
-                  <col style={{ width: "140px" }} />
-                  <col style={{ width: "140px" }} />
-                  <col style={{ width: "80px" }} />
-                  <col style={{ width: "160px" }} />
+                  <col style={{ width: "120px" }} />
+                  <col style={{ width: "120px" }} />
+                  <col style={{ width: "72px" }} />
+                  <col style={{ width: "120px" }} />
+                  <col style={{ width: "110px" }} />
                 </colgroup>
                 <thead>
                   <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
@@ -329,7 +386,8 @@ export function ReportesTabs({
                     <th className="px-3 py-3">Generado (mes)</th>
                     <th className="px-3 py-3">Esperado</th>
                     <th className="px-3 py-3">Δ %</th>
-                    <th className="px-3 py-3" />
+                    <th className="px-3 py-3">Estado</th>
+                    <th className="px-2 py-3 text-right">Acción</th>
                   </tr>
                 </thead>
               </table>
@@ -337,15 +395,16 @@ export function ReportesTabs({
                 <table className="w-full table-fixed border-collapse text-left">
                   <colgroup>
                     <col />
-                    <col style={{ width: "140px" }} />
-                    <col style={{ width: "140px" }} />
-                    <col style={{ width: "80px" }} />
-                    <col style={{ width: "160px" }} />
+                    <col style={{ width: "120px" }} />
+                    <col style={{ width: "120px" }} />
+                    <col style={{ width: "72px" }} />
+                    <col style={{ width: "120px" }} />
+                    <col style={{ width: "110px" }} />
                   </colgroup>
                   <tbody>
                     {contractual.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                        <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
                           Ninguna planta con compromiso mensual por debajo del mínimo (o sin datos de contrato).
                         </td>
                       </tr>
@@ -367,6 +426,20 @@ export function ReportesTabs({
                               INCUMPLIMIENTO
                             </span>
                           </td>
+                          <td className="px-2 py-2.5 text-right">
+                            <button
+                              type="button"
+                              className={reportActionBtnClass}
+                              onClick={() =>
+                                setOpenPlant({
+                                  id: r.plant_id,
+                                  name: plantName.get(r.plant_id) ?? r.plant_id,
+                                })
+                              }
+                            >
+                              Ver reporte
+                            </button>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -380,14 +453,15 @@ export function ReportesTabs({
         {/* ── Tab: Frecuencia ── */}
         {tab === "freq" && (
           <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
-            <div className="flex min-h-0 min-w-[560px] flex-1 flex-col text-xs sm:text-sm">
+            <div className="flex min-h-0 min-w-[700px] flex-1 flex-col text-xs sm:text-sm">
               <table className="w-full table-fixed border-collapse text-left">
                 <colgroup>
                   <col style={{ width: "40px" }} />
                   <col />
-                  <col style={{ width: "160px" }} />
-                  <col style={{ width: "100px" }} />
-                  <col style={{ width: "160px" }} />
+                  <col style={{ width: "140px" }} />
+                  <col style={{ width: "88px" }} />
+                  <col style={{ width: "140px" }} />
+                  <col style={{ width: "110px" }} />
                 </colgroup>
                 <thead>
                   <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
@@ -396,6 +470,7 @@ export function ReportesTabs({
                     <th className="px-3 py-3">Desviaciones (mes)</th>
                     <th className="px-3 py-3">Peor Hz</th>
                     <th className="px-3 py-3">Último incidente</th>
+                    <th className="px-2 py-3 text-right">Acción</th>
                   </tr>
                 </thead>
               </table>
@@ -404,14 +479,15 @@ export function ReportesTabs({
                   <colgroup>
                     <col style={{ width: "40px" }} />
                     <col />
-                    <col style={{ width: "160px" }} />
-                    <col style={{ width: "100px" }} />
-                    <col style={{ width: "160px" }} />
+                    <col style={{ width: "140px" }} />
+                    <col style={{ width: "88px" }} />
+                    <col style={{ width: "140px" }} />
+                    <col style={{ width: "110px" }} />
                   </colgroup>
                   <tbody>
                     {freqByPlant.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                        <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
                           Sin alarmas de frecuencia en el período.
                         </td>
                       </tr>
@@ -431,6 +507,20 @@ export function ReportesTabs({
                               ? r.last.toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })
                               : "—"}
                           </td>
+                          <td className="px-2 py-2.5 text-right">
+                            <button
+                              type="button"
+                              className={reportActionBtnClass}
+                              onClick={() =>
+                                setOpenPlant({
+                                  id: r.plant_id,
+                                  name: plantName.get(r.plant_id) ?? r.plant_id,
+                                })
+                              }
+                            >
+                              Ver reporte
+                            </button>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -442,6 +532,20 @@ export function ReportesTabs({
         )}
 
       </div>
+
+      <PlantReportModal
+        key={openPlant?.id ?? "closed"}
+        open={openPlant != null}
+        onOpenChange={(next) => {
+          if (!next) setOpenPlant(null);
+        }}
+        plant={openPlantDoc}
+        plantDisplayName={openPlant?.name ?? ""}
+        summariesForPlant={openPlantSummaries}
+        monthLabel={monthLabel}
+        year={year}
+        monthIndex={monthIndex}
+      />
     </div>
   );
 }

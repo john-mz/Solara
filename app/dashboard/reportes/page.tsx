@@ -71,6 +71,8 @@ export default function ReportesPage() {
           frequencyAlarms={freqQuery.data ?? []}
           monthLabel={monthLabel}
           daysInSample={daysInSample}
+          year={year}
+          monthIndex={monthIndex}
         />
       )}
     </main>
