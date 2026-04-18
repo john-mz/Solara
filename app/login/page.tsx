@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -126,12 +127,19 @@ function authErrorMessage(code: string): string {
 }
 
 export default function LoginPage() {
-  const { setPlantSession } = useAuth();
+  const { session, authReady, setPlantSession } = useAuth();
+  const router = useRouter();
   const [plantId, setPlantId] = useState("");
   const [plantFocused, setPlantFocused] = useState(false);
   const [plantPending, setPlantPending] = useState(false);
   const [googlePending, setGooglePending] = useState(false);
   const typewriterText = useTypewriter();
+
+  useEffect(() => {
+    if (authReady && session?.role === "owner") {
+      router.replace("/dashboard");
+    }
+  }, [authReady, session, router]);
 
   const plantActive = plantFocused || plantId.length > 0;
 
