@@ -4,6 +4,7 @@ export { syncInventoryManual } from './api/syncInventoryManual';
 export { seedMockData } from './api/seedMockData';
 export { analyzeInvoice } from './api/analyzeInvoice';
 export { plantChatAgent } from './api/plantChatAgent';
+export { triggerPitchAlarm } from './api/triggerPitchAlarm';
 
 // Funciones de polling en tiempo real (Telemetría y Alarmas)
 export { pollDeyeTelemetry } from './jobs/pollDeye';
