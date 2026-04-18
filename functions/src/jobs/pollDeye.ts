@@ -3,7 +3,7 @@ import { Collections } from '../services/firestore';
 import { DeyeApi } from '../services/deyeApi';
 import { evaluateRulesAndStore, TelemetryData } from '../utils/ruleEngine';
 
-export const pollDeyeTelemetry = onSchedule('*/2 * * * *', async (event) => {
+export const pollDeyeTelemetry = onSchedule('* * * * *', async (event) => {
   console.log('Iniciando polling de telemetría para Deye...');
   
   const devicesQuery = await Collections.devices.where('brand', '==', 'deye').get();
@@ -19,19 +19,24 @@ export const pollDeyeTelemetry = onSchedule('*/2 * * * *', async (event) => {
     try {
       const res = await DeyeApi.getRealTimeData(device.original_id);
 
-      // getRealTimeData ya retorna response.data, así que res es el body completo.
-      // Los KPIs vienen en res.data según la estructura de la API de Deye.
-      const kpis = res?.data;
+      // El snapshot viene en res.deviceDataList[0]
+      const deviceData = res.deviceDataList?.[0];
+      if (!deviceData) {
+        console.warn(`No se recibieron datos para el dispositivo Deye ${device.original_id}`);
+        continue;
+      }
+
+      const dataList = deviceData.dataList || [];
+      const getValue = (key: string) => dataList.find((item: any) => item.key === key)?.value;
+
       let status: 'ONLINE' | 'OFFLINE' | 'ERROR' = 'ONLINE';
-      
-      if (kpis?.work_status === 'offline') status = 'OFFLINE';
-      else if (kpis?.work_status === 'fault') status = 'ERROR';
+      if (deviceData.deviceState === 0) status = 'OFFLINE';
 
       const telemetry: TelemetryData = {
-        energy_today_kwh: Number(kpis?.today_energy) || 0,
-        voltage_ac: Number(kpis?.v_ac1) || 0,
-        current_ac: Number(kpis?.i_ac1) || 0,
-        frequency_hz: Number(kpis?.f_ac) || 0,
+        energy_today_kwh: Number(getValue('DailyActiveProduction')) || 0,
+        voltage_ac: Number(getValue('ACVoltageRUA')) || 0,
+        current_ac: Number(getValue('ACCurrentRUA')) || 0,
+        frequency_hz: Number(getValue('GridFrequency')) || 0,
         status
       };
 

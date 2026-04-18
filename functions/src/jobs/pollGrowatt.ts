@@ -3,39 +3,50 @@ import { Collections } from '../services/firestore';
 import { GrowattApi } from '../services/growattApi';
 import { evaluateRulesAndStore, TelemetryData } from '../utils/ruleEngine';
 
-export const pollGrowattTelemetry = onSchedule('*/2 * * * *', async (event) => {
+export const pollGrowattTelemetry = onSchedule('* * * * *', async (event) => {
   console.log('Iniciando polling de telemetría para Growatt...');
   
-  const devicesQuery = await Collections.devices.where('brand', '==', 'growatt').get();
+  const plantsQuery = await Collections.plants.where('brand', '==', 'growatt').get();
   
-  if (devicesQuery.empty) {
-    console.log('No hay dispositivos Growatt registrados.');
+  if (plantsQuery.empty) {
+    console.log('No hay plantas Growatt registradas.');
     return;
   }
 
-  for (const doc of devicesQuery.docs) {
-    const device = doc.data();
+  for (const plantDoc of plantsQuery.docs) {
+    const plant = plantDoc.data();
     try {
-      const res = await GrowattApi.getRealTimeData(device.original_id);
-      
+      // Usamos el ID original de la planta para obtener datos agregados
+      const res = await GrowattApi.getRealTimeData(plant.original_plant_id);
       const kpis = res.data;
-      let status: 'ONLINE' | 'OFFLINE' | 'ERROR' = 'ONLINE';
+
+      if (!kpis) {
+        console.warn(`No se recibieron datos para la planta Growatt ${plant.original_plant_id}`);
+        continue;
+      }
+
+      // Buscar dispositivos de esta planta para actualizar su telemetría
+      const devicesQuery = await Collections.devices.where('plant_id', '==', plantDoc.id).get();
       
-      // 0: Waiting/Offline, 1: Normal, 3: Fault
-      if (kpis?.status === 0) status = 'OFFLINE';
-      else if (kpis?.status === 3) status = 'ERROR';
+      for (const devDoc of devicesQuery.docs) {
+        let status: 'ONLINE' | 'OFFLINE' | 'ERROR' = 'ONLINE';
+        // Si no hay potencia y es de día, podría estar offline (simplificación)
+        if (Number(kpis.current_power) === 0 && new Date().getHours() > 6 && new Date().getHours() < 18) {
+          status = 'OFFLINE';
+        }
 
-      const telemetry: TelemetryData = {
-        energy_today_kwh: Number(kpis?.eToday) || 0,
-        voltage_ac: Number(kpis?.vac1) || 0,
-        current_ac: Number(kpis?.iac1) || 0,
-        frequency_hz: Number(kpis?.fac) || 0,
-        status
-      };
+        const telemetry: TelemetryData = {
+          energy_today_kwh: Number(kpis.today_energy) || 0,
+          voltage_ac: 0, // plant/data no reporta AC individual
+          current_ac: 0,
+          frequency_hz: 0,
+          status
+        };
 
-      await evaluateRulesAndStore(doc.id, device.plant_id, telemetry);
+        await evaluateRulesAndStore(devDoc.id, plantDoc.id, telemetry);
+      }
     } catch (error) {
-      console.error(`Error al procesar telemetría del dispositivo Growatt ${device.original_id}:`, error);
+      console.error(`Error al procesar telemetría de la planta Growatt ${plant.original_plant_id}:`, error);
     }
   }
 });
