@@ -6,7 +6,7 @@ import { Topbar } from "@/components/layout/topbar";
 
 export function ConditionalTopbar() {
   const pathname = usePathname();
-  if (pathname === "/login" || pathname === "/privacidad") return null;
+  if (pathname !== "/" && !pathname.startsWith("/dashboard")) return null;
   return (
     <>
       <Topbar />
