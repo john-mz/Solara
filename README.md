@@ -13,6 +13,8 @@ npm run dev
 
 Abrir [http://localhost:3000](http://localhost:3000).
 
+El frontend no requiere variables de entorno en local (la config de Firebase está en código). Para **desarrollar o desplegar** las Cloud Functions en `functions/`, copia [`functions/.env.example`](./functions/.env.example) a `functions/.env` y rellena `API_KEY` (middleware del hackathon) y, si aplica, `GEMINI_API_KEY` (cotizaciones con IA).
+
 ## Roles de acceso
 
 La app tiene dos modos de acceso desde la pantalla de login:
