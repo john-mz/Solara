@@ -159,7 +159,7 @@ export function Topbar() {
                 <button
                   type="button"
                   aria-label="Abrir menú de perfil"
-                  className="flex items-center gap-2.5 rounded-lg border border-border/70 bg-background/60 px-2 py-1.5 outline-none transition-colors hover:bg-background/90 data-[state=open]:bg-background/90"
+                  className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-border/70 bg-background/60 px-2 py-1.5 outline-none transition-colors hover:bg-background/90 data-[state=open]:bg-background/90"
                 >
                   <Avatar className="size-7 shrink-0 rounded-md ring-1 ring-border">
                     {avatarUrl ? (
