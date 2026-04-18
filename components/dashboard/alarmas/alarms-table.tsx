@@ -1,12 +1,14 @@
 "use client";
 
-import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
+import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale/es";
 import {
   dashboardSeverityCriticalDot,
   dashboardSeverityWarningDot,
 } from "@/lib/dashboard-chips";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlarmSolutionModal } from "@/components/dashboard/alarmas/alarm-solution-modal";
 import type { AlarmDoc, AlarmType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +28,25 @@ function alarmTypeLabel(type: AlarmType) {
     default:
       return type;
   }
+}
+
+function LightbulbIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M9 18h6" />
+      <path d="M10 22h4" />
+      <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
+    </svg>
+  );
 }
 
 export type AlarmsTableProps = {
@@ -48,6 +69,7 @@ export function AlarmsTable({
   onLoadMore,
 }: AlarmsTableProps) {
   const showCount = !isLoading && !errorMessage && alarms.length > 0;
+  const [solutionAlarm, setSolutionAlarm] = useState<AlarmDoc | null>(null);
 
   return (
     <div
@@ -70,17 +92,18 @@ export function AlarmsTable({
 
       {/* Outer container: handles horizontal scroll for both header and body together */}
       <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
-        <div className="flex min-h-0 min-w-[640px] flex-1 flex-col text-xs sm:text-sm">
+        <div className="flex min-h-0 min-w-[720px] flex-1 flex-col text-xs sm:text-sm">
 
           {/* Column header — outside the vertical scroll area, never hidden by scrolling rows */}
           <table className="w-full table-fixed border-collapse text-left">
             <colgroup>
+              <col style={{ width: "100px" }} />
+              <col style={{ width: "190px" }} />
+              <col style={{ width: "130px" }} />
+              <col style={{ width: "150px" }} />
               <col style={{ width: "110px" }} />
-              <col style={{ width: "200px" }} />
               <col style={{ width: "140px" }} />
-              <col style={{ width: "160px" }} />
-              <col style={{ width: "120px" }} />
-              <col />
+              <col style={{ width: "56px" }} />
             </colgroup>
             <thead>
               <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
@@ -90,6 +113,7 @@ export function AlarmsTable({
                 <th className="px-3 py-3">Dispositivo</th>
                 <th className="px-3 py-3">Lectura / umbral</th>
                 <th className="px-3 py-3">Hace</th>
+                <th className="px-2 py-3"></th>
               </tr>
             </thead>
           </table>
@@ -98,12 +122,13 @@ export function AlarmsTable({
           <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
             <table className="w-full table-fixed border-collapse text-left">
               <colgroup>
+                <col style={{ width: "100px" }} />
+                <col style={{ width: "190px" }} />
+                <col style={{ width: "130px" }} />
+                <col style={{ width: "150px" }} />
                 <col style={{ width: "110px" }} />
-                <col style={{ width: "200px" }} />
                 <col style={{ width: "140px" }} />
-                <col style={{ width: "160px" }} />
-                <col style={{ width: "120px" }} />
-                <col />
+                <col style={{ width: "56px" }} />
               </colgroup>
               <tbody>
                 {isLoading ? (
@@ -115,17 +140,18 @@ export function AlarmsTable({
                       <td className="px-3 py-2.5"><Skeleton className="h-5 w-20" /></td>
                       <td className="px-3 py-2.5"><Skeleton className="h-5 w-16" /></td>
                       <td className="px-3 py-2.5"><Skeleton className="h-5 w-12" /></td>
+                      <td className="px-2 py-2.5"><Skeleton className="size-7" /></td>
                     </tr>
                   ))
                 ) : errorMessage ? (
                   <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-destructive">
+                    <td colSpan={7} className="px-3 py-8 text-center text-destructive">
                       {errorMessage}
                     </td>
                   </tr>
                 ) : alarms.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-3 py-8 text-center text-muted-foreground">
                       No hay alarmas activas con este filtro.
                     </td>
                   </tr>
@@ -169,11 +195,26 @@ export function AlarmsTable({
                           {readStr}
                           {thrStr}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
-                          {formatDistanceToNow(a.created_at.toDate(), {
-                            addSuffix: true,
-                            locale: es,
-                          })}
+                        <td className="px-3 py-2.5 text-muted-foreground">
+                          <span className="whitespace-nowrap">
+                            {formatDistanceToNow(a.created_at.toDate(), {
+                              addSuffix: true,
+                              locale: es,
+                            })}
+                          </span>
+                          <span className="block whitespace-nowrap font-mono text-[0.62rem] text-muted-foreground/60">
+                            {format(a.created_at.toDate(), "dd/MM/yyyy HH:mm:ss")}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2.5">
+                          <button
+                            type="button"
+                            onClick={() => setSolutionAlarm(a)}
+                            title="Ver solución sugerida"
+                            className="flex size-7 items-center justify-center rounded-lg border border-border/70 bg-background/50 text-accent transition-all hover:scale-110 hover:bg-accent/10 hover:text-accent active:scale-95"
+                          >
+                            <LightbulbIcon className="size-4" />
+                          </button>
                         </td>
                       </tr>
                     );
@@ -197,6 +238,17 @@ export function AlarmsTable({
           </button>
         </div>
       ) : null}
+
+      {/* Solution modal */}
+      <AlarmSolutionModal
+        alarm={solutionAlarm}
+        plantName={
+          solutionAlarm
+            ? plantNameById.get(solutionAlarm.plant_id) ?? undefined
+            : undefined
+        }
+        onClose={() => setSolutionAlarm(null)}
+      />
     </div>
   );
 }
