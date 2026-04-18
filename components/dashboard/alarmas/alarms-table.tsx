@@ -6,6 +6,7 @@ import {
   dashboardSeverityCriticalDot,
   dashboardSeverityWarningDot,
 } from "@/lib/dashboard-chips";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { AlarmDoc, AlarmType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -106,11 +107,16 @@ export function AlarmsTable({
               </colgroup>
               <tbody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
-                      Cargando alarmas...
-                    </td>
-                  </tr>
+                  Array.from({ length: 7 }).map((_, i) => (
+                    <tr key={i} className="border-t border-white/10">
+                      <td className="px-3 py-2.5"><Skeleton className="h-5 w-16" /></td>
+                      <td className="px-3 py-2.5"><Skeleton className="h-5 w-full" /></td>
+                      <td className="px-3 py-2.5"><Skeleton className="h-5 w-full" /></td>
+                      <td className="px-3 py-2.5"><Skeleton className="h-5 w-20" /></td>
+                      <td className="px-3 py-2.5"><Skeleton className="h-5 w-16" /></td>
+                      <td className="px-3 py-2.5"><Skeleton className="h-5 w-12" /></td>
+                    </tr>
+                  ))
                 ) : errorMessage ? (
                   <tr>
                     <td colSpan={6} className="px-3 py-8 text-center text-destructive">
@@ -187,7 +193,7 @@ export function AlarmsTable({
             onClick={onLoadMore}
             className="w-full rounded-lg border border-white/20 bg-white/10 py-2 text-sm font-medium text-foreground backdrop-blur-sm hover:bg-white/20 disabled:opacity-50"
           >
-            {isFetchingNextPage ? "Cargando..." : "Cargar más"}
+            Cargar más
           </button>
         </div>
       ) : null}

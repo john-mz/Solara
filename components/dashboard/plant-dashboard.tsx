@@ -33,6 +33,7 @@ import {
 } from "@/lib/dashboard-chips";
 import type { PlantDoc } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const cardPaper =
   "border border-white/18 bg-white/10 shadow-[0_2px_18px_rgb(0,0,0,0.035)] backdrop-blur-md rounded-[var(--radius-xl)]";
@@ -187,7 +188,7 @@ function kmCarEquivalent(tonsCo2: number): number {
  *   ≤150 kW → gasolinera         (commercial / gas station)
  *   > 150 kW → fábrica           (industrial)
  */
-function illustrationFor(kw: number): { src: string; alt: string } {
+export function illustrationFor(kw: number): { src: string; alt: string } {
   if (kw <= 3)
     return { src: "/illustrations/campestre-pequeña.png", alt: "Casa campestre pequeña con paneles solares" };
   if (kw <= 8)
@@ -240,14 +241,27 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
 
   if (summariesQuery.isLoading && !summariesQuery.data) {
     return (
-      <main className="flex min-h-0 flex-1 items-center justify-center overflow-hidden px-5">
-        <motion.p
-          animate={{ opacity: 1 }}
-          className="text-sm text-muted-foreground"
-          initial={{ opacity: 0 }}
-        >
-          Cargando...
-        </motion.p>
+      <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-20 sm:pb-5">
+        <div className="flex shrink-0 flex-col gap-3 py-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-24 rounded-md" />
+            <Skeleton className="h-8 w-56 sm:h-9" />
+          </div>
+          <Skeleton className="h-9 w-44 rounded-lg" />
+        </div>
+        <div className="grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-[var(--radius-xl)]" />
+          ))}
+        </div>
+        <div className="mt-3 flex flex-1 flex-col gap-3">
+          <Skeleton className="min-h-[260px] w-full flex-1 rounded-[var(--radius-xl)]" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 rounded-[var(--radius-xl)]" />
+            ))}
+          </div>
+        </div>
       </main>
     );
   }
@@ -618,69 +632,91 @@ export function PlantDashboard({ plant }: PlantDashboardProps) {
       {/* Table */}
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className={cn(
-          cardPaper,
-          "mt-3 flex h-[220px] flex-col gap-2 overflow-hidden p-4"
-        )}
+        className={cn(cardPaper, "mt-3 flex h-[220px] flex-col overflow-hidden")}
         initial={{ opacity: 0, y: 8 }}
         transition={{ duration: 0.35, delay: 0.16 }}
       >
-        <h2 className="shrink-0 text-sm font-semibold tracking-tight text-foreground">
-          Resumen diario
-        </h2>
-        <div className="min-h-0 flex-1 overflow-auto pr-1 scrollbar-hide">
-          <table className="w-full min-w-[520px] border-collapse text-left text-xs sm:text-sm">
-            <thead>
-              <tr className="border-b border-white/15 text-[0.65rem] uppercase tracking-wide text-muted-foreground">
-                <th className="sticky top-0 bg-white/5 py-2 pr-3 backdrop-blur-sm">
-                  Fecha
-                </th>
-                <th className="sticky top-0 bg-white/5 py-2 pr-3 text-right backdrop-blur-sm">
-                  kWh
-                </th>
-                <th className="sticky top-0 bg-white/5 py-2 pr-3 text-right backdrop-blur-sm">
-                  Uptime %
-                </th>
-                <th className="sticky top-0 bg-white/5 py-2 pr-3 text-right backdrop-blur-sm">
-                  Ahorro COP
-                </th>
-                <th className="sticky top-0 bg-white/5 py-2 text-right backdrop-blur-sm">
-                  CO₂ t
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {[...rows]
-                .sort((a, b) => b.date.localeCompare(a.date))
-                .map((r) => (
-                  <tr
-                    key={r.id}
-                    className="border-b border-white/10 last:border-0"
-                  >
-                    <td className="py-2 pr-3 tabular-nums text-foreground">
-                      {format(parseISO(r.date), "dd/MM/yyyy", { locale: es })}
-                    </td>
-                    <td className="py-2 pr-3 text-right tabular-nums">
-                      {metricFormatter.format(r.total_energy_kwh)}
-                    </td>
-                    <td className="py-2 pr-3 text-right tabular-nums">
-                      {metricFormatter.format(r.avg_uptime_percent)}
-                    </td>
-                    <td className="py-2 pr-3 text-right tabular-nums">
-                      {copFormatter.format(r.financial_savings)}
-                    </td>
-                    <td className="py-2 text-right tabular-nums">
-                      {co2Formatter.format(r.co2_mitigated_tons)}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-          {rows.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              Sin filas para mostrar.
-            </p>
-          ) : null}
+        {/* Card header bar */}
+        <div className="flex shrink-0 items-center justify-between border-b border-white/15 px-4 py-3">
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            Resumen diario
+          </h2>
+          {rows.length > 0 && (
+            <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[0.7rem] font-medium tabular-nums text-muted-foreground ring-1 ring-white/15">
+              {rows.length} {rows.length === 1 ? "día" : "días"}
+            </span>
+          )}
+        </div>
+
+        {/* Outer container: horizontal scroll for both header and body */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
+          <div className="flex min-h-0 min-w-[520px] flex-1 flex-col text-xs sm:text-sm">
+
+            {/* Column header — outside the vertical scroll area */}
+            <table className="w-full table-fixed border-collapse text-left">
+              <colgroup>
+                <col style={{ width: "110px" }} />
+                <col style={{ width: "90px" }} />
+                <col style={{ width: "90px" }} />
+                <col />
+                <col style={{ width: "80px" }} />
+              </colgroup>
+              <thead>
+                <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
+                  <th className="px-3 py-3">Fecha</th>
+                  <th className="px-3 py-3 text-right">kWh</th>
+                  <th className="px-3 py-3 text-right">Uptime %</th>
+                  <th className="px-3 py-3 text-right">Ahorro COP</th>
+                  <th className="px-3 py-3 text-right">CO₂ t</th>
+                </tr>
+              </thead>
+            </table>
+
+            {/* Body — only this part scrolls vertically */}
+            <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+              <table className="w-full table-fixed border-collapse text-left">
+                <colgroup>
+                  <col style={{ width: "110px" }} />
+                  <col style={{ width: "90px" }} />
+                  <col style={{ width: "90px" }} />
+                  <col />
+                  <col style={{ width: "80px" }} />
+                </colgroup>
+                <tbody>
+                  {rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                        Sin filas para mostrar.
+                      </td>
+                    </tr>
+                  ) : (
+                    [...rows]
+                      .sort((a, b) => b.date.localeCompare(a.date))
+                      .map((r) => (
+                        <tr key={r.id} className="border-t border-white/10 hover:bg-white/[0.06]">
+                          <td className="px-3 py-2.5 tabular-nums text-foreground">
+                            {format(parseISO(r.date), "dd/MM/yyyy", { locale: es })}
+                          </td>
+                          <td className="px-3 py-2.5 text-right tabular-nums">
+                            {metricFormatter.format(r.total_energy_kwh)}
+                          </td>
+                          <td className="px-3 py-2.5 text-right tabular-nums">
+                            {metricFormatter.format(r.avg_uptime_percent)}
+                          </td>
+                          <td className="px-3 py-2.5 text-right tabular-nums">
+                            {copFormatter.format(r.financial_savings)}
+                          </td>
+                          <td className="px-3 py-2.5 text-right tabular-nums">
+                            {co2Formatter.format(r.co2_mitigated_tons)}
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
         </div>
       </motion.div>
     </main>

@@ -8,6 +8,7 @@ import {
   dashboardChipNeutral,
   dashboardChipOnline,
 } from "@/lib/dashboard-chips";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { DeviceDoc, TelemetryDoc } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -84,11 +85,16 @@ export function DispositivosTable({
               </colgroup>
               <tbody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
-                      Cargando dispositivos...
-                    </td>
-                  </tr>
+                  Array.from({ length: 7 }).map((_, i) => (
+                    <tr key={i} className="border-t border-white/10">
+                      <td className="px-3 py-2.5"><Skeleton className="h-5 w-14" /></td>
+                      <td className="px-3 py-2.5"><Skeleton className="h-5 w-full" /></td>
+                      <td className="px-3 py-2.5"><Skeleton className="h-5 w-16" /></td>
+                      <td className="px-3 py-2.5"><Skeleton className="h-5 w-20" /></td>
+                      <td className="px-3 py-2.5"><Skeleton className="h-5 w-24" /></td>
+                      <td className="px-3 py-2.5"><Skeleton className="h-5 w-20" /></td>
+                    </tr>
+                  ))
                 ) : devices.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">

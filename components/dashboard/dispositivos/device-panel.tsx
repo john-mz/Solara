@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useDeviceTelemetry } from "@/lib/firestore-hooks";
 import type { DeviceDoc } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const metricFormatter = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 2,
@@ -86,7 +87,11 @@ export function DevicePanel({
 
             <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2 scrollbar-hide">
               {tel.isLoading ? (
-                <p className="p-4 text-sm text-muted-foreground">Cargando...</p>
+                <div className="space-y-2 p-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full rounded-[var(--radius-lg)]" />
+                  ))}
+                </div>
               ) : !tel.data?.length ? (
                 <p className="p-4 text-sm text-muted-foreground">
                   No hay lecturas recientes.

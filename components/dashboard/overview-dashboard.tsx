@@ -24,6 +24,7 @@ import {
 } from "@/lib/dashboard-chips";
 import type { PlantBrand } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const cardPaper =
   "border border-white/18 bg-white/10 shadow-[0_2px_18px_rgb(0,0,0,0.035)] backdrop-blur-md rounded-[var(--radius-xl)]";
@@ -115,14 +116,27 @@ export function OverviewDashboard() {
 
   if (!data || !fleet || isLoadingFleet) {
     return (
-      <main className="flex min-h-0 flex-1 items-center justify-center overflow-hidden px-5">
-        <motion.p
-          animate={{ opacity: 1 }}
-          className="text-sm text-muted-foreground"
-          initial={{ opacity: 0 }}
-        >
-          Cargando...
-        </motion.p>
+      <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-20 sm:pb-5">
+        <div className="flex shrink-0 items-end justify-between gap-4 py-4">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-28 rounded-md" />
+            <Skeleton className="h-8 w-48 sm:h-9" />
+          </div>
+          <Skeleton className="h-9 w-28 rounded-lg" />
+        </div>
+        <div className="grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-[var(--radius-xl)]" />
+          ))}
+        </div>
+        <div className="mt-3 grid min-h-0 flex-1 grid-cols-1 gap-3 md:grid-cols-2">
+          <Skeleton className="min-h-[260px] rounded-[var(--radius-xl)]" />
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 rounded-[var(--radius-xl)]" />
+            ))}
+          </div>
+        </div>
       </main>
     );
   }

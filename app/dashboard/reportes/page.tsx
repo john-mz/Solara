@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useMemo } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ReportesTabs } from "@/components/dashboard/reportes/reportes-tabs";
 import {
   useFrequencyAlarmsForMonth,
@@ -49,7 +50,20 @@ export default function ReportesPage() {
       </motion.div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Cargando reportes...</p>
+        <div className="flex flex-1 flex-col gap-3">
+          <div className="flex shrink-0 gap-2 border-b border-white/10 pb-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-28 rounded-md" />
+            ))}
+          </div>
+          <Skeleton className="h-24 w-full rounded-[var(--radius-xl)]" />
+          <div className="flex flex-1 flex-col gap-2 rounded-[var(--radius-xl)] border border-white/15 bg-white/5 p-3">
+            <Skeleton className="h-10 w-full rounded-lg" />
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-11 w-full rounded-md" />
+            ))}
+          </div>
+        </div>
       ) : (
         <ReportesTabs
           summaries={summariesQuery.data ?? []}
