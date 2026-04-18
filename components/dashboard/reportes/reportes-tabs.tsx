@@ -215,190 +215,232 @@ export function ReportesTabs({
         ))}
       </div>
 
-      <div
-        className={cn(
-          cardPaper,
-          "min-h-0 flex-1 overflow-hidden p-3 sm:p-4"
+      <div className={cn(cardPaper, "flex min-h-0 flex-1 flex-col overflow-hidden")}>
+
+        {/* ── Tab: Generación ── */}
+        {tab === "gen" && (
+          <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
+            <div className="flex min-h-0 min-w-[520px] flex-1 flex-col text-xs sm:text-sm">
+              <table className="w-full table-fixed border-collapse text-left">
+                <colgroup>
+                  <col style={{ width: "40px" }} />
+                  <col />
+                  <col style={{ width: "140px" }} />
+                  <col style={{ width: "140px" }} />
+                </colgroup>
+                <thead>
+                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
+                    <th className="px-3 py-3">#</th>
+                    <th className="px-3 py-3">Planta</th>
+                    <th className="px-3 py-3">Total kWh mes</th>
+                    <th className="px-3 py-3">Prom. kWh/día</th>
+                  </tr>
+                </thead>
+              </table>
+              <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+                <table className="w-full table-fixed border-collapse text-left">
+                  <colgroup>
+                    <col style={{ width: "40px" }} />
+                    <col />
+                    <col style={{ width: "140px" }} />
+                    <col style={{ width: "140px" }} />
+                  </colgroup>
+                  <tbody>
+                    {rankingGen.map((r) => (
+                      <tr key={r.plant_id} className="border-t border-white/10 hover:bg-white/[0.06]">
+                        <td className="px-3 py-2.5 tabular-nums text-muted-foreground">{r.rank}</td>
+                        <td className="px-3 py-2.5 font-medium text-foreground">
+                          {plantName.get(r.plant_id) ?? r.plant_id}
+                        </td>
+                        <td className="px-3 py-2.5 tabular-nums">{metricFormatter.format(r.total_kwh)}</td>
+                        <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
+                          {metricFormatter.format(r.avg_per_day)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         )}
-      >
-        <div className="h-full overflow-auto scrollbar-hide">
-          {tab === "gen" ? (
-            <table className="w-full min-w-[520px] border-collapse text-left text-xs sm:text-sm">
-              <thead className="sticky top-0 bg-white/20 backdrop-blur-sm">
-                <tr className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
-                  <th className="px-2 py-2">#</th>
-                  <th className="px-2 py-2">Planta</th>
-                  <th className="px-2 py-2">Total kWh mes</th>
-                  <th className="px-2 py-2">Prom. kWh/día</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rankingGen.map((r) => (
-                  <tr
-                    key={r.plant_id}
-                    className="border-t border-white/10 hover:bg-white/[0.06]"
-                  >
-                    <td className="px-2 py-2 tabular-nums text-muted-foreground">
-                      {r.rank}
-                    </td>
-                    <td className="px-2 py-2 font-medium text-foreground">
-                      {plantName.get(r.plant_id) ?? r.plant_id}
-                    </td>
-                    <td className="px-2 py-2 tabular-nums">
-                      {metricFormatter.format(r.total_kwh)}
-                    </td>
-                    <td className="px-2 py-2 tabular-nums text-muted-foreground">
-                      {metricFormatter.format(r.avg_per_day)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : null}
 
-          {tab === "co2" ? (
-            <table className="w-full min-w-[520px] border-collapse text-left text-xs sm:text-sm">
-              <thead className="sticky top-0 bg-white/20 backdrop-blur-sm">
-                <tr className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
-                  <th className="px-2 py-2">#</th>
-                  <th className="px-2 py-2">Planta</th>
-                  <th className="px-2 py-2">CO₂ (t)</th>
-                  <th className="px-2 py-2">Equivalente</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rankingCo2.map((r) => (
-                  <tr
-                    key={r.plant_id}
-                    className="border-t border-white/10 hover:bg-white/[0.06]"
-                  >
-                    <td className="px-2 py-2 tabular-nums text-muted-foreground">
-                      {r.rank}
-                    </td>
-                    <td className="px-2 py-2 font-medium text-foreground">
-                      {plantName.get(r.plant_id) ?? r.plant_id}
-                    </td>
-                    <td className="px-2 py-2 tabular-nums">
-                      {metricFormatter.format(r.tons)}
-                    </td>
-                    <td className="px-2 py-2 text-muted-foreground">
-                      {treesEquivalent(r.tons)}
-                    </td>
+        {/* ── Tab: CO₂ ── */}
+        {tab === "co2" && (
+          <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
+            <div className="flex min-h-0 min-w-[520px] flex-1 flex-col text-xs sm:text-sm">
+              <table className="w-full table-fixed border-collapse text-left">
+                <colgroup>
+                  <col style={{ width: "40px" }} />
+                  <col />
+                  <col style={{ width: "120px" }} />
+                  <col style={{ width: "180px" }} />
+                </colgroup>
+                <thead>
+                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
+                    <th className="px-3 py-3">#</th>
+                    <th className="px-3 py-3">Planta</th>
+                    <th className="px-3 py-3">CO₂ (t)</th>
+                    <th className="px-3 py-3">Equivalente</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : null}
+                </thead>
+              </table>
+              <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+                <table className="w-full table-fixed border-collapse text-left">
+                  <colgroup>
+                    <col style={{ width: "40px" }} />
+                    <col />
+                    <col style={{ width: "120px" }} />
+                    <col style={{ width: "180px" }} />
+                  </colgroup>
+                  <tbody>
+                    {rankingCo2.map((r) => (
+                      <tr key={r.plant_id} className="border-t border-white/10 hover:bg-white/[0.06]">
+                        <td className="px-3 py-2.5 tabular-nums text-muted-foreground">{r.rank}</td>
+                        <td className="px-3 py-2.5 font-medium text-foreground">
+                          {plantName.get(r.plant_id) ?? r.plant_id}
+                        </td>
+                        <td className="px-3 py-2.5 tabular-nums">{metricFormatter.format(r.tons)}</td>
+                        <td className="px-3 py-2.5 text-muted-foreground">{treesEquivalent(r.tons)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
 
-          {tab === "contract" ? (
-            <table className="w-full min-w-[560px] border-collapse text-left text-xs sm:text-sm">
-              <thead className="sticky top-0 bg-white/20 backdrop-blur-sm">
-                <tr className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
-                  <th className="px-2 py-2">Planta</th>
-                  <th className="px-2 py-2">Generado (mes)</th>
-                  <th className="px-2 py-2">Esperado</th>
-                  <th className="px-2 py-2">Δ %</th>
-                  <th className="px-2 py-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {contractual.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-2 py-6 text-center text-muted-foreground"
-                    >
-                      Ninguna planta con compromiso mensual por debajo del
-                      mínimo (o sin datos de contrato).
-                    </td>
+        {/* ── Tab: Contractual ── */}
+        {tab === "contract" && (
+          <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
+            <div className="flex min-h-0 min-w-[560px] flex-1 flex-col text-xs sm:text-sm">
+              <table className="w-full table-fixed border-collapse text-left">
+                <colgroup>
+                  <col />
+                  <col style={{ width: "140px" }} />
+                  <col style={{ width: "140px" }} />
+                  <col style={{ width: "80px" }} />
+                  <col style={{ width: "160px" }} />
+                </colgroup>
+                <thead>
+                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
+                    <th className="px-3 py-3">Planta</th>
+                    <th className="px-3 py-3">Generado (mes)</th>
+                    <th className="px-3 py-3">Esperado</th>
+                    <th className="px-3 py-3">Δ %</th>
+                    <th className="px-3 py-3" />
                   </tr>
-                ) : (
-                  contractual.map((r) => (
-                    <tr
-                      key={r.plant_id}
-                      className="border-t border-white/10 hover:bg-white/[0.06]"
-                    >
-                      <td className="px-2 py-2 font-medium text-foreground">
-                        {plantName.get(r.plant_id) ?? r.plant_id}
-                      </td>
-                      <td className="px-2 py-2 tabular-nums">
-                        {metricFormatter.format(r.generated)} kWh
-                      </td>
-                      <td className="px-2 py-2 tabular-nums text-muted-foreground">
-                        {metricFormatter.format(r.expected)} kWh
-                      </td>
-                      <td className="px-2 py-2 tabular-nums text-destructive">
-                        {metricFormatter.format(r.deltaPct)}%
-                      </td>
-                      <td className="px-2 py-2">
-                        <span
-                          className={cn(
-                            "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold",
-                            dashboardChipDanger
-                          )}
-                        >
-                          INCUMPLIMIENTO
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          ) : null}
+                </thead>
+              </table>
+              <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+                <table className="w-full table-fixed border-collapse text-left">
+                  <colgroup>
+                    <col />
+                    <col style={{ width: "140px" }} />
+                    <col style={{ width: "140px" }} />
+                    <col style={{ width: "80px" }} />
+                    <col style={{ width: "160px" }} />
+                  </colgroup>
+                  <tbody>
+                    {contractual.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                          Ninguna planta con compromiso mensual por debajo del mínimo (o sin datos de contrato).
+                        </td>
+                      </tr>
+                    ) : (
+                      contractual.map((r) => (
+                        <tr key={r.plant_id} className="border-t border-white/10 hover:bg-white/[0.06]">
+                          <td className="px-3 py-2.5 font-medium text-foreground">
+                            {plantName.get(r.plant_id) ?? r.plant_id}
+                          </td>
+                          <td className="px-3 py-2.5 tabular-nums">{metricFormatter.format(r.generated)} kWh</td>
+                          <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
+                            {metricFormatter.format(r.expected)} kWh
+                          </td>
+                          <td className="px-3 py-2.5 tabular-nums text-destructive">
+                            {metricFormatter.format(r.deltaPct)}%
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <span className={cn("rounded-full px-2 py-0.5 text-[0.65rem] font-semibold", dashboardChipDanger)}>
+                              INCUMPLIMIENTO
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
 
-          {tab === "freq" ? (
-            <table className="w-full min-w-[560px] border-collapse text-left text-xs sm:text-sm">
-              <thead className="sticky top-0 bg-white/20 backdrop-blur-sm">
-                <tr className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
-                  <th className="px-2 py-2">#</th>
-                  <th className="px-2 py-2">Planta</th>
-                  <th className="px-2 py-2">Desviaciones (mes)</th>
-                  <th className="px-2 py-2">Peor Hz</th>
-                  <th className="px-2 py-2">Último incidente</th>
-                </tr>
-              </thead>
-              <tbody>
-                {freqByPlant.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-2 py-6 text-center text-muted-foreground"
-                    >
-                      Sin alarmas de frecuencia en el período.
-                    </td>
+        {/* ── Tab: Frecuencia ── */}
+        {tab === "freq" && (
+          <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
+            <div className="flex min-h-0 min-w-[560px] flex-1 flex-col text-xs sm:text-sm">
+              <table className="w-full table-fixed border-collapse text-left">
+                <colgroup>
+                  <col style={{ width: "40px" }} />
+                  <col />
+                  <col style={{ width: "160px" }} />
+                  <col style={{ width: "100px" }} />
+                  <col style={{ width: "160px" }} />
+                </colgroup>
+                <thead>
+                  <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
+                    <th className="px-3 py-3">#</th>
+                    <th className="px-3 py-3">Planta</th>
+                    <th className="px-3 py-3">Desviaciones (mes)</th>
+                    <th className="px-3 py-3">Peor Hz</th>
+                    <th className="px-3 py-3">Último incidente</th>
                   </tr>
-                ) : (
-                  freqByPlant.map((r, i) => (
-                    <tr
-                      key={r.plant_id}
-                      className="border-t border-white/10 hover:bg-white/[0.06]"
-                    >
-                      <td className="px-2 py-2 text-muted-foreground">
-                        {i + 1}
-                      </td>
-                      <td className="px-2 py-2 font-medium text-foreground">
-                        {plantName.get(r.plant_id) ?? r.plant_id}
-                      </td>
-                      <td className="px-2 py-2 tabular-nums">{r.count}</td>
-                      <td className="px-2 py-2 tabular-nums text-destructive">
-                        {r.worst ? `${metricFormatter.format(r.worst)} Hz` : "—"}
-                      </td>
-                      <td className="px-2 py-2 text-muted-foreground">
-                        {r.last
-                          ? r.last.toLocaleString("es-CO", {
-                              dateStyle: "short",
-                              timeStyle: "short",
-                            })
-                          : "—"}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          ) : null}
-        </div>
+                </thead>
+              </table>
+              <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+                <table className="w-full table-fixed border-collapse text-left">
+                  <colgroup>
+                    <col style={{ width: "40px" }} />
+                    <col />
+                    <col style={{ width: "160px" }} />
+                    <col style={{ width: "100px" }} />
+                    <col style={{ width: "160px" }} />
+                  </colgroup>
+                  <tbody>
+                    {freqByPlant.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                          Sin alarmas de frecuencia en el período.
+                        </td>
+                      </tr>
+                    ) : (
+                      freqByPlant.map((r, i) => (
+                        <tr key={r.plant_id} className="border-t border-white/10 hover:bg-white/[0.06]">
+                          <td className="px-3 py-2.5 text-muted-foreground">{i + 1}</td>
+                          <td className="px-3 py-2.5 font-medium text-foreground">
+                            {plantName.get(r.plant_id) ?? r.plant_id}
+                          </td>
+                          <td className="px-3 py-2.5 tabular-nums">{r.count}</td>
+                          <td className="px-3 py-2.5 tabular-nums text-destructive">
+                            {r.worst ? `${metricFormatter.format(r.worst)} Hz` : "—"}
+                          </td>
+                          <td className="px-3 py-2.5 text-muted-foreground">
+                            {r.last
+                              ? r.last.toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })
+                              : "—"}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

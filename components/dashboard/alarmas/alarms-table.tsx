@@ -46,101 +46,141 @@ export function AlarmsTable({
   isFetchingNextPage,
   onLoadMore,
 }: AlarmsTableProps) {
+  const showCount = !isLoading && !errorMessage && alarms.length > 0;
+
   return (
     <div
       className={cn(
         cardPaper,
-        "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3 sm:p-4"
+        "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
       )}
     >
-      <div className="min-h-0 flex-1 overflow-auto scrollbar-hide">
-        <table className="w-full min-w-[640px] border-collapse text-left text-xs sm:text-sm">
-          <thead className="sticky top-0 z-10 bg-[oklch(0.97_0.015_85/0.92)] backdrop-blur-sm">
-            <tr className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
-              <th className="px-2 py-2">Severidad</th>
-              <th className="px-2 py-2">Tipo</th>
-              <th className="px-2 py-2">Planta</th>
-              <th className="px-2 py-2">Dispositivo</th>
-              <th className="px-2 py-2">Lectura / umbral</th>
-              <th className="px-2 py-2">Hace</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={6} className="px-2 py-8 text-center text-muted-foreground">
-                  Cargando alarmas...
-                </td>
+      {/* Card header bar */}
+      <div className="flex shrink-0 items-center justify-between border-b border-white/15 px-4 py-3">
+        <h3 className="text-sm font-semibold tracking-tight text-foreground">
+          Lista de alarmas
+        </h3>
+        {showCount && (
+          <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[0.7rem] font-medium tabular-nums text-muted-foreground ring-1 ring-white/15">
+            {alarms.length} {alarms.length === 1 ? "alarma" : "alarmas"}
+          </span>
+        )}
+      </div>
+
+      {/* Outer container: handles horizontal scroll for both header and body together */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-x-auto scrollbar-hide">
+        <div className="flex min-h-0 min-w-[640px] flex-1 flex-col text-xs sm:text-sm">
+
+          {/* Column header — outside the vertical scroll area, never hidden by scrolling rows */}
+          <table className="w-full table-fixed border-collapse text-left">
+            <colgroup>
+              <col style={{ width: "110px" }} />
+              <col style={{ width: "200px" }} />
+              <col style={{ width: "140px" }} />
+              <col style={{ width: "160px" }} />
+              <col style={{ width: "120px" }} />
+              <col />
+            </colgroup>
+            <thead>
+              <tr className="border-b border-white/20 text-[0.62rem] font-semibold uppercase tracking-widest text-muted-foreground/80">
+                <th className="px-3 py-3">Severidad</th>
+                <th className="px-3 py-3">Tipo</th>
+                <th className="px-3 py-3">Planta</th>
+                <th className="px-3 py-3">Dispositivo</th>
+                <th className="px-3 py-3">Lectura / umbral</th>
+                <th className="px-3 py-3">Hace</th>
               </tr>
-            ) : errorMessage ? (
-              <tr>
-                <td colSpan={6} className="px-2 py-8 text-center text-destructive">
-                  {errorMessage}
-                </td>
-              </tr>
-            ) : alarms.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-2 py-8 text-center text-muted-foreground">
-                  No hay alarmas activas con este filtro.
-                </td>
-              </tr>
-            ) : (
-              alarms.map((a) => {
-                const plantName =
-                  plantNameById.get(a.plant_id) ?? a.plant_id.slice(0, 12);
-                const read = a.details?.reading_value;
-                const thr = a.details?.threshold_value;
-                const readStr =
-                  read != null ? String(read) : "—";
-                const thrStr =
-                  thr != null ? ` / ${thr}` : "";
-                return (
-                  <tr
-                    key={a.id}
-                    className="border-t border-white/15 align-middle hover:bg-white/[0.06]"
-                  >
-                    <td className="px-2 py-2">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span
-                          className={cn(
-                            "size-1.5 shrink-0 rounded-full",
-                            a.severity === "CRITICAL"
-                              ? dashboardSeverityCriticalDot
-                              : dashboardSeverityWarningDot
-                          )}
-                          aria-hidden
-                        />
-                        <span className="font-medium">{a.severity}</span>
-                      </span>
-                    </td>
-                    <td className="px-2 py-2 font-medium text-foreground">
-                      {alarmTypeLabel(a.type)}
-                    </td>
-                    <td className="max-w-[140px] truncate px-2 py-2 text-muted-foreground">
-                      {plantName}
-                    </td>
-                    <td className="px-2 py-2 font-mono text-[0.7rem] text-muted-foreground">
-                      {a.device_id || "—"}
-                    </td>
-                    <td className="px-2 py-2 tabular-nums text-muted-foreground">
-                      {readStr}
-                      {thrStr}
-                    </td>
-                    <td className="whitespace-nowrap px-2 py-2 text-muted-foreground">
-                      {formatDistanceToNow(a.created_at.toDate(), {
-                        addSuffix: true,
-                        locale: es,
-                      })}
+            </thead>
+          </table>
+
+          {/* Body — only this part scrolls vertically */}
+          <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+            <table className="w-full table-fixed border-collapse text-left">
+              <colgroup>
+                <col style={{ width: "110px" }} />
+                <col style={{ width: "200px" }} />
+                <col style={{ width: "140px" }} />
+                <col style={{ width: "160px" }} />
+                <col style={{ width: "120px" }} />
+                <col />
+              </colgroup>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
+                      Cargando alarmas...
                     </td>
                   </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                ) : errorMessage ? (
+                  <tr>
+                    <td colSpan={6} className="px-3 py-8 text-center text-destructive">
+                      {errorMessage}
+                    </td>
+                  </tr>
+                ) : alarms.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
+                      No hay alarmas activas con este filtro.
+                    </td>
+                  </tr>
+                ) : (
+                  alarms.map((a) => {
+                    const plantName =
+                      plantNameById.get(a.plant_id) ?? a.plant_id.slice(0, 12);
+                    const read = a.details?.reading_value;
+                    const thr = a.details?.threshold_value;
+                    const readStr = read != null ? String(read) : "—";
+                    const thrStr = thr != null ? ` / ${thr}` : "";
+                    return (
+                      <tr
+                        key={a.id}
+                        className="border-t border-white/10 align-middle hover:bg-white/[0.06]"
+                      >
+                        <td className="px-3 py-2.5">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span
+                              className={cn(
+                                "size-1.5 shrink-0 rounded-full",
+                                a.severity === "CRITICAL"
+                                  ? dashboardSeverityCriticalDot
+                                  : dashboardSeverityWarningDot
+                              )}
+                              aria-hidden
+                            />
+                            <span className="font-medium">{a.severity}</span>
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 font-medium text-foreground">
+                          {alarmTypeLabel(a.type)}
+                        </td>
+                        <td className="truncate px-3 py-2.5 text-muted-foreground">
+                          {plantName}
+                        </td>
+                        <td className="px-3 py-2.5 font-mono text-[0.7rem] text-muted-foreground">
+                          {a.device_id || "—"}
+                        </td>
+                        <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
+                          {readStr}
+                          {thrStr}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
+                          {formatDistanceToNow(a.created_at.toDate(), {
+                            addSuffix: true,
+                            locale: es,
+                          })}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
       </div>
       {hasNextPage ? (
-        <div className="shrink-0 border-t border-white/15 pt-3">
+        <div className="shrink-0 border-t border-white/15 px-4 py-3">
           <button
             type="button"
             disabled={isFetchingNextPage}
