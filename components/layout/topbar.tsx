@@ -103,11 +103,12 @@ export function Topbar() {
           className="flex shrink-0 items-center gap-3 outline-none ring-ring focus-visible:ring-2"
         >
           <Image
-            src="/solara-logo.webp"
+            src="/solara-logo-2.webp"
             alt="Solara"
             width={40}
             height={40}
             className="size-10 shrink-0 rounded-[6px] object-contain drop-shadow-md"
+            priority
           />
           <div className="flex min-w-0 flex-col gap-0.5 leading-none">
             <span className="font-[family-name:var(--font-heading)] text-[1.15rem] font-semibold tracking-tight text-foreground">

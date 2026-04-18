@@ -2,8 +2,11 @@
 
 import { formatDistanceStrict } from "date-fns";
 import { es } from "date-fns/locale/es";
-import { KpiCard } from "@/components/dashboard/shared/kpi-card";
 import { useAlarmKpis } from "@/lib/firestore-hooks";
+import { cn } from "@/lib/utils";
+
+const cardPaper =
+  "border border-white/18 bg-white/10 shadow-[0_2px_18px_rgb(0,0,0,0.035)] backdrop-blur-md rounded-[var(--radius-xl)]";
 
 const metricFormatter = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 0,
@@ -24,40 +27,49 @@ export function AlarmsKpis() {
 
   if (isLoading || !data) {
     return (
-      <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-[4.5rem] animate-pulse rounded-[var(--radius-xl)] border border-white/15 bg-white/10"
-          />
-        ))}
-      </div>
+      <div
+        className={cn(
+          cardPaper,
+          "h-[4.75rem] shrink-0 animate-pulse border border-white/15 bg-white/10"
+        )}
+      />
     );
   }
 
   return (
-    <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4">
-      <KpiCard
-        icon="🔴"
-        label="Total alarmas activas"
-        value={metricFormatter.format(data.totalActive)}
-      />
-      <KpiCard
-        icon="🟡"
-        label="Críticas activas"
-        value={metricFormatter.format(data.criticalActive)}
-      />
-      <KpiCard
-        icon="⚫"
-        label="Dispositivos offline"
-        value={metricFormatter.format(data.offlineActive)}
-      />
-      <KpiCard
-        icon="⏱️"
-        label="Tiempo prom. sin resolver"
-        value={formatAvgUnresolved(data.avgUnresolvedMs)}
-        sublabel="Promedio desde creación"
-      />
+    <div
+      className={cn(
+        cardPaper,
+        "grid shrink-0 grid-cols-2 gap-x-6 gap-y-3 px-4 py-3 sm:grid-cols-4"
+      )}
+    >
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">Total activas</p>
+        <p className="mt-0.5 font-semibold tabular-nums text-foreground sm:text-lg">
+          {metricFormatter.format(data.totalActive)}
+        </p>
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">Críticas activas</p>
+        <p className="mt-0.5 font-semibold tabular-nums text-foreground sm:text-lg">
+          {metricFormatter.format(data.criticalActive)}
+        </p>
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">Dispositivos offline</p>
+        <p className="mt-0.5 font-semibold tabular-nums text-foreground sm:text-lg">
+          {metricFormatter.format(data.offlineActive)}
+        </p>
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">Tiempo prom. sin resolver</p>
+        <p className="mt-0.5 font-semibold tabular-nums text-foreground sm:text-lg">
+          {formatAvgUnresolved(data.avgUnresolvedMs)}
+        </p>
+        <p className="mt-0.5 text-[0.65rem] text-muted-foreground">
+          Promedio desde creación
+        </p>
+      </div>
     </div>
   );
 }

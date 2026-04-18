@@ -10,11 +10,12 @@ export default function PrivacyPolicyPage() {
         <div className="mb-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image
-              src="/solara-logo.webp"
+              src="/solara-logo-2.webp"
               alt="Solara"
               width={40}
               height={40}
               className="size-10 rounded-lg object-contain drop-shadow-sm"
+              priority
             />
             <div className="flex flex-col">
               <span className={cn("font-[family-name:var(--font-heading)] text-xl font-bold tracking-tight text-foreground leading-none")}>

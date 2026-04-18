@@ -15,6 +15,12 @@ const intFormatter = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 0,
 });
 
+const copFormatter = new Intl.NumberFormat("es-CO", {
+  style: "currency",
+  currency: "COP",
+  maximumFractionDigits: 0,
+});
+
 const TABS = [
   { id: "gen", label: "Generación" },
   { id: "co2", label: "CO₂" },
@@ -145,41 +151,38 @@ export function ReportesTabs({
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden">
-      <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4">
-        <div className={cn(cardPaper, "px-3 py-2.5 sm:px-4 sm:py-3")}>
-          <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
-            ⚡ Generación total flota
+      <div
+        className={cn(
+          cardPaper,
+          "grid shrink-0 grid-cols-2 gap-x-6 gap-y-3 px-4 py-3 sm:grid-cols-4"
+        )}
+      >
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">Generación flota</p>
+          <p className="mt-0.5 font-semibold tabular-nums text-foreground sm:text-lg">
+            {metricFormatter.format(headerTotals.gen)}{" "}
+            <span className="font-normal text-muted-foreground">kWh</span>
           </p>
-          <p className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold tabular-nums">
-            {metricFormatter.format(headerTotals.gen)} kWh
-          </p>
-          <p className="text-[0.65rem] text-muted-foreground">{monthLabel}</p>
-        </div>
-        <div className={cn(cardPaper, "px-3 py-2.5 sm:px-4 sm:py-3")}>
-          <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
-            🌿 CO₂ total mitigado
-          </p>
-          <p className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold tabular-nums">
-            {metricFormatter.format(headerTotals.co2t)} t
+          <p className="mt-0.5 text-[0.65rem] text-muted-foreground">
+            {monthLabel}
           </p>
         </div>
-        <div className={cn(cardPaper, "px-3 py-2.5 sm:px-4 sm:py-3")}>
-          <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
-            💰 Ahorro total
-          </p>
-          <p className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold tabular-nums">
-            {new Intl.NumberFormat("es-CO", {
-              style: "currency",
-              currency: "COP",
-              maximumFractionDigits: 0,
-            }).format(headerTotals.money)}
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">CO₂ mitigado</p>
+          <p className="mt-0.5 font-semibold tabular-nums text-foreground sm:text-lg">
+            {metricFormatter.format(headerTotals.co2t)}{" "}
+            <span className="font-normal text-muted-foreground">t</span>
           </p>
         </div>
-        <div className={cn(cardPaper, "px-3 py-2.5 sm:px-4 sm:py-3")}>
-          <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
-            ⚠️ Plantas en incumplimiento
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">Ahorro total</p>
+          <p className="mt-0.5 font-semibold tabular-nums text-foreground sm:text-lg">
+            {copFormatter.format(headerTotals.money)}
           </p>
-          <p className="mt-1 font-[family-name:var(--font-heading)] text-lg font-semibold tabular-nums">
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">Plantas en incumplimiento</p>
+          <p className="mt-0.5 font-semibold tabular-nums text-foreground sm:text-lg">
             {intFormatter.format(headerTotals.breach)}
           </p>
         </div>

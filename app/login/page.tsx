@@ -206,7 +206,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center gap-6 text-center">
           <div className="flex flex-col items-center gap-3">
             <Image
-              src="/solara-logo.webp"
+              src="/solara-logo-2.webp"
               alt="Solara"
               width={72}
               height={72}
