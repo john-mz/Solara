@@ -1,0 +1,37 @@
+---
+description: How to use the Firebase MCP server to inspect and manage the Firebase project
+alwaysApply: true
+---
+
+# Firebase MCP Access
+
+The Firebase MCP server (`user-firebase`) is enabled for this project.  
+Active project: **hackathon-cursor** (alias: `default`).
+
+## How to use it
+
+Always call `firebase_get_environment` first to confirm auth status and active project before using any other tool.
+
+If `Authenticated User` is `<NONE>`, call `firebase_login` so the user can authenticate before proceeding.
+
+## Available tools
+
+| Tool | What it does |
+|------|-------------|
+| `firebase_get_environment` | Get active project, auth user, firebase.json |
+| `firebase_login` / `firebase_logout` | Authenticate with Firebase |
+| `firebase_list_projects` | List all Firebase projects |
+| `firebase_get_project` | Get details for a specific project |
+| `firebase_list_apps` / `firebase_create_app` | Manage web/Android/iOS apps |
+| `firebase_get_sdk_config` | Get SDK config for an app |
+| `firebase_get_security_rules` | Read Firestore / RTDB / Storage rules (type: `firestore` \| `rtdb` \| `storage`) |
+| `firebase_init` | Initialize Firebase features (Firestore, Hosting, Auth…) |
+| `functions_list_functions` | List deployed Cloud Functions |
+| `functions_get_logs` | Fetch Cloud Function logs |
+| `developerknowledge_answer_query` | Answer questions using official Firebase docs |
+
+## Firestore specifics
+
+- To read current security rules: call `firebase_get_security_rules` with `type: "firestore"`.
+- Firestore is **not yet initialized** in `firebase.json` — run `firebase_init` to add it.
+- The Firestore SDK is also **not yet imported** in `lib/firebase.ts` (only Auth is set up).
