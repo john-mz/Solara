@@ -4,7 +4,8 @@ import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { signInWithGoogle } from "@/lib/auth";
+import { useAuth } from "@/components/providers/auth-provider";
+import { lookupPlantById, signInWithGoogle } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -49,13 +50,36 @@ function authErrorMessage(code: string): string {
 }
 
 export default function LoginPage() {
-  const [pending, setPending] = useState(false);
+  const { setPlantSession } = useAuth();
+  const [plantId, setPlantId] = useState("");
+  const [plantPending, setPlantPending] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
+
+  async function handlePlantSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setPlantPending(true);
+    try {
+      const plant = await lookupPlantById(plantId);
+      if (!plant) {
+        toast.error(
+          "No encontramos una instalación con ese número. Revisa el dato e intenta de nuevo."
+        );
+        return;
+      }
+      await setPlantSession(plant);
+      toast.success(`Bienvenido, ${plant.name}`);
+    } catch {
+      toast.error("No se pudo verificar la instalación. Intenta de nuevo.");
+    } finally {
+      setPlantPending(false);
+    }
+  }
 
   async function handleGoogleSignIn() {
-    setPending(true);
+    setGooglePending(true);
     try {
       await signInWithGoogle();
-      toast.success("Sesión iniciada correctamente");
+      toast.success("Sesión de administrador iniciada");
     } catch (err: unknown) {
       const code =
         typeof err === "object" &&
@@ -66,7 +90,7 @@ export default function LoginPage() {
           : "";
       toast.error(authErrorMessage(code));
     } finally {
-      setPending(false);
+      setGooglePending(false);
     }
   }
 
@@ -102,24 +126,74 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <p className="text-pretty text-sm text-muted-foreground">
-            Inicia sesión con tu cuenta de Google para continuar.
-          </p>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            className={cn(
-              "h-11 w-full gap-3 rounded-xl border-border bg-background/80 text-foreground shadow-sm",
-              "hover:bg-muted/80"
-            )}
-            disabled={pending}
-            onClick={handleGoogleSignIn}
+          <form
+            onSubmit={handlePlantSubmit}
+            className="flex w-full flex-col gap-3 text-left"
           >
-            <GoogleIcon />
-            {pending ? "Conectando…" : "Continuar con Google"}
-          </Button>
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="plant-id"
+                className="text-sm font-medium text-foreground"
+              >
+                Número de instalación
+              </label>
+              <input
+                id="plant-id"
+                name="plant-id"
+                type="text"
+                autoComplete="off"
+                placeholder="Ej. 122825 o NE=33685734"
+                value={plantId}
+                onChange={(e) => setPlantId(e.target.value)}
+                className={cn(
+                  "h-11 w-full rounded-xl border border-input bg-background/80 px-3 text-sm text-foreground outline-none",
+                  "placeholder:text-muted-foreground",
+                  "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                Es el mismo código que aparece en tu contrato o te lo compartió
+                el equipo. Sin contraseña.
+              </p>
+            </div>
+            <Button
+              type="submit"
+              size="lg"
+              className="h-11 w-full rounded-xl"
+              disabled={plantPending || !plantId.trim()}
+            >
+              {plantPending ? "Verificando…" : "Ingresar a mi instalación"}
+            </Button>
+          </form>
+
+          <div className="flex w-full items-center gap-3">
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              o
+            </span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <div className="flex w-full flex-col gap-2">
+            <p className="text-pretty text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Administradores</span>
+              : accede con la cuenta de Google de Techos Rentables.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className={cn(
+                "h-11 w-full gap-3 rounded-xl border-border bg-background/80 text-foreground shadow-sm",
+                "hover:bg-muted/80"
+              )}
+              disabled={googlePending}
+              onClick={handleGoogleSignIn}
+            >
+              <GoogleIcon />
+              {googlePending ? "Conectando…" : "Continuar con Google"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

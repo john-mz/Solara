@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Iniciar sesión",
-  description: "Accede a Solara con tu cuenta de Google",
+  description:
+    "Accede con el número de tu instalación o como administrador con Google",
 };
 
 export default function LoginLayout({
