@@ -1,6 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  dashboardChipDanger,
+  dashboardFilterPillActive,
+  dashboardFilterPillInactive,
+} from "@/lib/dashboard-chips";
 import type { AlarmDoc, DailySummaryDoc, PlantDoc } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -202,9 +207,7 @@ export function ReportesTabs({
             onClick={() => setTab(t.id)}
             className={cn(
               "rounded-full px-3 py-1.5 text-xs font-medium sm:text-sm",
-              tab === t.id
-                ? "bg-gradient-to-br from-[color-mix(in_oklch,var(--primary),white_9%)] to-[color-mix(in_oklch,var(--primary),black_7%)] text-primary-foreground shadow-sm"
-                : "border border-white/20 bg-white/10 text-muted-foreground hover:bg-white/15"
+              tab === t.id ? dashboardFilterPillActive : dashboardFilterPillInactive
             )}
           >
             {t.label}
@@ -328,7 +331,12 @@ export function ReportesTabs({
                         {metricFormatter.format(r.deltaPct)}%
                       </td>
                       <td className="px-2 py-2">
-                        <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-[0.65rem] font-semibold text-destructive">
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold",
+                            dashboardChipDanger
+                          )}
+                        >
                           INCUMPLIMIENTO
                         </span>
                       </td>

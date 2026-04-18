@@ -14,6 +14,15 @@ import {
   type Alarm,
   type Plant,
 } from "@/lib/mock-solar-data";
+import {
+  dashboardBrandBadgeClass,
+  dashboardChipNeutral,
+  dashboardChipOnline,
+  dashboardChipWarning,
+  dashboardSeverityCriticalDot,
+  dashboardSeverityWarningDot,
+} from "@/lib/dashboard-chips";
+import type { PlantBrand } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const cardPaper =
@@ -33,19 +42,6 @@ const co2Formatter = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 3,
 });
 
-function brandBadgeClass(brand: Plant["brand"]) {
-  switch (brand) {
-    case "deye":
-      return "bg-amber-500/15 text-amber-800 dark:text-amber-300 ring-1 ring-amber-500/35";
-    case "huawei":
-      return "bg-red-500/10 text-red-800 dark:text-red-300 ring-1 ring-red-500/30";
-    case "growatt":
-      return "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-500/30";
-    default:
-      return "bg-muted text-muted-foreground ring-1 ring-border";
-  }
-}
-
 function statusLabel(status: Plant["status"]) {
   switch (status) {
     case "ONLINE":
@@ -62,13 +58,13 @@ function statusLabel(status: Plant["status"]) {
 function statusPillClass(status: Plant["status"]) {
   switch (status) {
     case "ONLINE":
-      return "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300";
+      return dashboardChipOnline;
     case "OFFLINE":
-      return "bg-muted text-muted-foreground";
+      return dashboardChipNeutral;
     case "WARNING":
-      return "bg-amber-500/15 text-amber-800 dark:text-amber-300";
+      return dashboardChipWarning;
     default:
-      return "bg-muted";
+      return dashboardChipNeutral;
   }
 }
 
@@ -308,7 +304,7 @@ export function OverviewDashboard() {
                   <span
                     className={cn(
                       "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide",
-                      brandBadgeClass(plant.brand)
+                      dashboardBrandBadgeClass(plant.brand as PlantBrand)
                     )}
                   >
                     {plant.brand}
@@ -409,8 +405,8 @@ export function OverviewDashboard() {
                     className={cn(
                       "mt-1 size-1.5 shrink-0 rounded-full",
                       alarm.severity === "CRITICAL"
-                        ? "bg-destructive"
-                        : "bg-amber-500"
+                        ? dashboardSeverityCriticalDot
+                        : dashboardSeverityWarningDot
                     )}
                     aria-hidden
                   />

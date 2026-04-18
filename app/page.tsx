@@ -1,6 +1,6 @@
 "use client";
 
-import { OverviewDashboard } from "@/components/dashboard/overview-dashboard";
+import { PlantDashboard } from "@/components/dashboard/plant-dashboard";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -16,7 +16,18 @@ export default function Home() {
     }
   }, [authReady, session, router]);
 
-  if (!authReady || session?.role === "owner") {
+  useEffect(() => {
+    if (!authReady) return;
+    if (session === null) {
+      router.replace("/login");
+    }
+  }, [authReady, session, router]);
+
+  if (
+    !authReady ||
+    session?.role === "owner" ||
+    session === null
+  ) {
     return (
       <main className="flex min-h-0 flex-1 items-center justify-center overflow-hidden px-5">
         <p className="text-sm text-muted-foreground">Cargando...</p>
@@ -24,5 +35,5 @@ export default function Home() {
     );
   }
 
-  return <OverviewDashboard />;
+  return <PlantDashboard plant={session.plant} />;
 }

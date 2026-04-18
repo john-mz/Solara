@@ -2,6 +2,10 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale/es";
+import {
+  dashboardSeverityCriticalDot,
+  dashboardSeverityWarningDot,
+} from "@/lib/dashboard-chips";
 import type { AlarmDoc, AlarmType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -51,7 +55,7 @@ export function AlarmsTable({
     >
       <div className="min-h-0 flex-1 overflow-auto scrollbar-hide">
         <table className="w-full min-w-[640px] border-collapse text-left text-xs sm:text-sm">
-          <thead className="sticky top-0 z-10 bg-white/20 backdrop-blur-sm">
+          <thead className="sticky top-0 z-10 bg-[oklch(0.97_0.015_85/0.92)] backdrop-blur-sm">
             <tr className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
               <th className="px-2 py-2">Severidad</th>
               <th className="px-2 py-2">Tipo</th>
@@ -101,8 +105,8 @@ export function AlarmsTable({
                           className={cn(
                             "size-1.5 shrink-0 rounded-full",
                             a.severity === "CRITICAL"
-                              ? "bg-destructive"
-                              : "bg-amber-500"
+                              ? dashboardSeverityCriticalDot
+                              : dashboardSeverityWarningDot
                           )}
                           aria-hidden
                         />

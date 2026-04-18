@@ -136,8 +136,11 @@ export default function LoginPage() {
   const typewriterText = useTypewriter();
 
   useEffect(() => {
-    if (authReady && session?.role === "owner") {
+    if (!authReady) return;
+    if (session?.role === "owner") {
       router.replace("/dashboard");
+    } else if (session?.role === "plant") {
+      router.replace("/");
     }
   }, [authReady, session, router]);
 

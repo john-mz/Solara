@@ -48,10 +48,13 @@ function readPlantFromStorage(): PlantDoc | null {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(() => null);
-  const [plantSession, setPlantSessionState] = useState<PlantDoc | null>(
-    () => readPlantFromStorage()
-  );
+  const [plantSession, setPlantSessionState] = useState<PlantDoc | null>(null);
   const [authReady, setAuthReady] = useState(false);
+
+  /** Hydrate plant session after mount so SSR and first client render match (avoids hydration mismatch). */
+  useEffect(() => {
+    setPlantSessionState(readPlantFromStorage());
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {

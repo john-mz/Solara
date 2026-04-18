@@ -1,6 +1,13 @@
 "use client";
 
-import type { DailySummaryDoc, PlantBrand, PlantDoc } from "@/lib/types";
+import {
+  dashboardBrandBadgeClass,
+  dashboardChipDanger,
+  dashboardChipNeutral,
+  dashboardChipOnline,
+  dashboardChipWarning,
+} from "@/lib/dashboard-chips";
+import type { DailySummaryDoc, PlantDoc } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const cardPaper =
@@ -10,41 +17,28 @@ const metricFormatter = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 1,
 });
 
-function brandBadgeClass(brand: PlantBrand) {
-  switch (brand) {
-    case "deye":
-      return "bg-amber-500/15 text-amber-800 dark:text-amber-300 ring-1 ring-amber-500/35";
-    case "huawei":
-      return "bg-red-500/10 text-red-800 dark:text-red-300 ring-1 ring-red-500/30";
-    case "growatt":
-      return "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-500/30";
-    default:
-      return "bg-muted text-muted-foreground ring-1 ring-border";
-  }
-}
-
 function statusPill(uptime: number | undefined) {
   if (uptime == null) {
     return {
       label: "Sin datos hoy",
-      className: "bg-muted text-muted-foreground",
+      className: dashboardChipNeutral,
     };
   }
   if (uptime >= 99.5) {
     return {
       label: "En línea",
-      className: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300",
+      className: dashboardChipOnline,
     };
   }
   if (uptime >= 95) {
     return {
       label: "Advertencia",
-      className: "bg-amber-500/15 text-amber-800 dark:text-amber-300",
+      className: dashboardChipWarning,
     };
   }
   return {
     label: "SLA comprometido",
-    className: "bg-destructive/15 text-destructive",
+    className: dashboardChipDanger,
   };
 }
 
@@ -97,7 +91,7 @@ export function PlantasGrid({
               <span
                 className={cn(
                   "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide",
-                  brandBadgeClass(p.brand)
+                  dashboardBrandBadgeClass(p.brand)
                 )}
               >
                 {p.brand}

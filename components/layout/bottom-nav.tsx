@@ -112,14 +112,14 @@ export function BottomNav() {
               className={cn(
                 "relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg py-2 text-[0.65rem] font-medium transition-colors",
                 active
-                  ? "text-primary-foreground"
+                  ? "text-background"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               {active ? (
                 <motion.span
                   layoutId="nav-pill-mobile"
-                  className="absolute inset-0 rounded-lg bg-gradient-to-br from-[color-mix(in_oklch,var(--primary),white_9%)] to-[color-mix(in_oklch,var(--primary),black_7%)] shadow-sm"
+                  className="absolute inset-0 rounded-lg bg-foreground shadow-sm ring-1 ring-foreground/20"
                   transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 />
               ) : null}

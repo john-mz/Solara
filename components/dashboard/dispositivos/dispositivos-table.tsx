@@ -2,24 +2,17 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale/es";
-import type { DeviceDoc, PlantBrand, TelemetryDoc } from "@/lib/types";
+import {
+  dashboardBrandBadgeClass,
+  dashboardChipDanger,
+  dashboardChipNeutral,
+  dashboardChipOnline,
+} from "@/lib/dashboard-chips";
+import type { DeviceDoc, TelemetryDoc } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const cardPaper =
   "border border-white/18 bg-white/10 shadow-[0_2px_18px_rgb(0,0,0,0.035)] backdrop-blur-md rounded-[var(--radius-xl)]";
-
-function brandBadgeClass(brand: PlantBrand) {
-  switch (brand) {
-    case "deye":
-      return "bg-amber-500/15 text-amber-800 dark:text-amber-300 ring-1 ring-amber-500/35";
-    case "huawei":
-      return "bg-red-500/10 text-red-800 dark:text-red-300 ring-1 ring-red-500/30";
-    case "growatt":
-      return "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-500/30";
-    default:
-      return "bg-muted text-muted-foreground ring-1 ring-border";
-  }
-}
 
 export type DispositivosTableProps = {
   devices: DeviceDoc[];
@@ -86,15 +79,30 @@ export function DispositivosTable({
                   >
                     <td className="px-2 py-2">
                       {err ? (
-                        <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-[0.65rem] font-semibold text-destructive">
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold",
+                            dashboardChipDanger
+                          )}
+                        >
                           ERROR
                         </span>
                       ) : st === "ONLINE" ? (
-                        <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[0.65rem] font-medium text-emerald-800 dark:text-emerald-300">
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-[0.65rem] font-medium",
+                            dashboardChipOnline
+                          )}
+                        >
                           ONLINE
                         </span>
                       ) : (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-[0.65rem] text-muted-foreground">
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-[0.65rem]",
+                            dashboardChipNeutral
+                          )}
+                        >
                           {st ?? "—"}
                         </span>
                       )}
@@ -106,7 +114,7 @@ export function DispositivosTable({
                       <span
                         className={cn(
                           "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase",
-                          brandBadgeClass(d.brand)
+                          dashboardBrandBadgeClass(d.brand)
                         )}
                       >
                         {d.brand}

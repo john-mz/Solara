@@ -9,6 +9,10 @@ import {
   useDailySummariesForDate,
   usePlants,
 } from "@/lib/firestore-hooks";
+import {
+  dashboardFilterPillActive,
+  dashboardFilterPillInactive,
+} from "@/lib/dashboard-chips";
 import type { PlantBrand } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -86,9 +90,7 @@ export default function PlantasPage() {
           onClick={() => setSlaOnly((v) => !v)}
           className={cn(
             "rounded-full px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm",
-            slaOnly
-              ? "bg-gradient-to-br from-[color-mix(in_oklch,var(--primary),white_9%)] to-[color-mix(in_oklch,var(--primary),black_7%)] text-primary-foreground shadow-sm"
-              : "border border-white/20 bg-white/10 text-muted-foreground hover:bg-white/15"
+            slaOnly ? dashboardFilterPillActive : dashboardFilterPillInactive
           )}
         >
           Solo SLA comprometido
