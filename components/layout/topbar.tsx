@@ -96,32 +96,35 @@ export function Topbar() {
 
   return (
     <header className="w-full shrink-0 bg-transparent">
-      <div className="mx-auto flex h-20 w-full items-center justify-between gap-6 px-8 lg:px-10">
+      <div className="mx-auto flex h-14 w-full items-center justify-between gap-3 px-4 sm:h-20 sm:gap-6 sm:px-8 lg:px-10">
         {/* Logo */}
         <Link
           href={logoHref}
-          className="flex shrink-0 items-center gap-3 outline-none ring-ring focus-visible:ring-2"
+          className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 outline-none ring-ring focus-visible:ring-2"
         >
           <Image
             src="/solara-logo-2.webp"
             alt="Solara"
             width={40}
             height={40}
-            className="size-10 shrink-0 rounded-[6px] object-contain drop-shadow-md"
+            className="size-9 shrink-0 rounded-[6px] object-contain drop-shadow-md sm:size-10"
             priority
           />
           <div className="flex min-w-0 flex-col gap-0.5 leading-none">
-            <span className="font-[family-name:var(--font-heading)] text-[1.15rem] font-semibold tracking-tight text-foreground">
+            <span className="font-[family-name:var(--font-heading)] text-[1.05rem] font-semibold tracking-tight text-foreground sm:text-[1.15rem]">
               Solara
             </span>
-            <span className="text-[0.7rem] font-normal tracking-wide text-muted-foreground">
+            <span className="hidden text-[0.7rem] font-normal tracking-wide text-muted-foreground sm:block">
               by Techos Rentables
             </span>
           </div>
         </Link>
 
-        {/* Nav */}
-        <nav className="flex items-center gap-4" aria-label="Main navigation">
+        {/* Nav — desktop/tablet; mobile uses BottomNav for owner */}
+        <nav
+          className="hidden items-center gap-4 sm:flex"
+          aria-label="Main navigation"
+        >
           {navItems.map((item) => {
             const active =
               item.href === "/"

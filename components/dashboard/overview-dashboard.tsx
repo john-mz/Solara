@@ -132,7 +132,7 @@ export function OverviewDashboard() {
   }
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pb-5">
+    <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-20 md:overflow-hidden sm:pb-5">
       {/* Page header — title + actions, between topbar and grid */}
       <motion.div
         animate={{ opacity: 1, y: 0 }}
@@ -165,13 +165,13 @@ export function OverviewDashboard() {
         </div>
       </motion.div>
 
-      <div className="grid min-h-0 flex-1 w-full grid-cols-[1fr_1.5fr_1fr] grid-rows-2 gap-3">
+      <div className="grid w-full grid-cols-1 gap-3 md:min-h-0 md:flex-1 md:grid-cols-[1fr_1.5fr_1fr] md:grid-rows-2">
         {/* Card A — metrics */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
           className={cn(
             cardPaper,
-            "flex min-h-0 min-w-0 flex-col justify-between gap-3 p-4"
+            "flex min-h-[180px] min-w-0 flex-col justify-between gap-3 p-4 md:min-h-0"
           )}
           initial={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.35 }}
@@ -209,7 +209,7 @@ export function OverviewDashboard() {
         {/* Center top — floating house image (no card) */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="relative flex min-h-0 min-w-0 flex-col"
+          className="relative flex h-48 min-w-0 flex-col md:h-auto md:min-h-0 md:flex-1"
           initial={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.35, delay: 0.05 }}
         >
@@ -237,7 +237,7 @@ export function OverviewDashboard() {
           animate={{ opacity: 1, y: 0 }}
           className={cn(
             cardPaper,
-            "flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden p-4"
+            "flex min-h-[180px] min-w-0 flex-col gap-3 overflow-hidden p-4 md:min-h-0"
           )}
           initial={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.35, delay: 0.08 }}
@@ -286,7 +286,7 @@ export function OverviewDashboard() {
           animate={{ opacity: 1, y: 0 }}
           className={cn(
             cardPaper,
-            "flex min-h-0 min-w-0 flex-col gap-2 overflow-hidden p-4"
+            "flex min-h-[180px] min-w-0 flex-col gap-2 overflow-hidden p-4 md:min-h-0"
           )}
           initial={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.35, delay: 0.1 }}
@@ -355,7 +355,7 @@ export function OverviewDashboard() {
           animate={{ opacity: 1, y: 0 }}
           className={cn(
             cardPaper,
-            "flex min-h-0 min-w-0 flex-col gap-2 overflow-hidden p-4"
+            "flex min-h-[220px] min-w-0 flex-col gap-2 overflow-hidden p-4 md:min-h-0"
           )}
           initial={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.35, delay: 0.12 }}
@@ -378,7 +378,7 @@ export function OverviewDashboard() {
           animate={{ opacity: 1, y: 0 }}
           className={cn(
             cardPaper,
-            "flex min-h-0 min-w-0 flex-col gap-2 overflow-hidden p-4"
+            "flex min-h-[180px] min-w-0 flex-col gap-2 overflow-hidden p-4 md:min-h-0"
           )}
           initial={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.35, delay: 0.14 }}

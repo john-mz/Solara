@@ -60,7 +60,7 @@ export default function DispositivosPage() {
     devices.find((d) => d.id === selectedId) ?? null;
 
   return (
-    <main className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-5 pb-5">
+    <main className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-5 pb-20 sm:pb-5">
       <motion.div
         animate={{ opacity: 1, y: 0 }}
         className="flex shrink-0 flex-col gap-1 py-3 sm:py-4"
