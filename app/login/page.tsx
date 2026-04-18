@@ -183,45 +183,47 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6 py-10">
-      <div className="mb-6 flex w-full max-w-[520px] flex-col items-center gap-1 text-center">
+    <div className="flex flex-1 flex-col items-center justify-center px-4 py-2 sm:py-4 lg:py-6 sm:px-6">
+      <div className="mb-3 flex w-full max-w-5xl flex-col items-center gap-1 text-center sm:mb-4 lg:mb-5">
         <h2
           className={cn(
-            "font-[family-name:var(--font-heading)] text-3xl font-bold tracking-tight text-foreground/90 sm:text-4xl",
-            "flex items-baseline gap-0 whitespace-nowrap leading-tight"
+            "font-[family-name:var(--font-heading)] text-xl font-bold tracking-tight text-foreground/90 lg:text-3xl xl:text-4xl",
+            "leading-tight"
           )}
         >
-          <span>Tu energía solar,&nbsp;</span>
-          <span className="text-primary">{typewriterText}</span>
-          <span className="ml-0.5 animate-pulse font-light text-primary/70">|</span>
+          <span>Tu energía solar, </span>
+          <span className="text-primary sm:whitespace-nowrap">
+            {typewriterText}
+            <span className="ml-0.5 animate-pulse font-light text-primary/70">|</span>
+          </span>
         </h2>
       </div>
 
       <div
         className={cn(
-          "w-full max-w-[400px] rounded-2xl border border-border/60 bg-card/90 px-8 pb-5 pt-8 shadow-lg shadow-foreground/5 backdrop-blur-sm",
+          "w-full max-w-[400px] rounded-2xl border border-border/60 bg-card/90 px-5 pb-4 pt-5 shadow-lg shadow-foreground/5 backdrop-blur-sm sm:px-6 sm:pb-4 sm:pt-6 lg:px-8 lg:pb-5 lg:pt-8",
           "ring-1 ring-border/40"
         )}
       >
-        <div className="flex flex-col items-center gap-6 text-center">
-          <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-3 text-center sm:gap-4 lg:gap-6">
+          <div className="flex flex-col items-center gap-2 sm:gap-2 lg:gap-3">
             <Image
               src="/solara-logo-2.webp"
               alt="Solara"
               width={72}
               height={72}
-              className="size-[72px] rounded-xl object-contain drop-shadow-md"
+              className="size-14 rounded-xl object-contain drop-shadow-md sm:size-[60px] lg:size-[72px]"
               priority
             />
             <div className="flex flex-col gap-0.5">
               <h1
                 className={cn(
-                  "font-[family-name:var(--font-heading)] text-2xl font-semibold tracking-tight text-foreground"
+                  "font-[family-name:var(--font-heading)] text-xl font-semibold tracking-tight text-foreground sm:text-xl lg:text-2xl"
                 )}
               >
                 Solara
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground sm:text-xs lg:text-sm">
                 by Techos Rentables
               </p>
             </div>
@@ -229,9 +231,9 @@ export default function LoginPage() {
 
           <form
             onSubmit={handlePlantSubmit}
-            className="flex w-full flex-col gap-3 text-left"
+            className="flex w-full flex-col gap-2 text-left sm:gap-2 lg:gap-3"
           >
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1">
               <div
                 className={cn(
                   "relative overflow-hidden rounded-xl border transition-colors duration-300",
@@ -265,7 +267,7 @@ export default function LoginPage() {
                     onFocus={() => setPlantFocused(true)}
                     onBlur={() => setPlantFocused(false)}
                     className={cn(
-                      "h-14 w-full rounded-xl bg-transparent px-3 pb-2 pt-5 text-sm text-foreground outline-none",
+                      "h-12 w-full rounded-xl bg-transparent px-3 pb-1.5 pt-4 text-sm text-foreground outline-none sm:h-12 lg:h-14 lg:pb-2 lg:pt-5",
                       "placeholder:text-transparent"
                     )}
                   />
@@ -274,7 +276,7 @@ export default function LoginPage() {
                     className={cn(
                       "pointer-events-none absolute left-3 origin-left text-sm transition-all duration-200",
                       plantActive
-                        ? "top-[9px] scale-[0.76] font-medium text-foreground/60"
+                        ? "top-[7px] scale-[0.76] font-medium text-foreground/60"
                         : "top-1/2 -translate-y-1/2 text-muted-foreground"
                     )}
                   >
@@ -289,7 +291,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               size="lg"
-              className="relative h-11 w-full overflow-hidden rounded-xl transition-transform duration-150 hover:scale-[1.02] active:scale-[0.99]"
+              className="relative h-10 w-full overflow-hidden rounded-xl transition-transform duration-150 hover:scale-[1.02] active:scale-[0.99] lg:h-11"
               disabled={plantPending || !plantId.trim()}
             >
               {!plantPending && plantId.trim() && (
@@ -312,7 +314,7 @@ export default function LoginPage() {
           </div>
 
           <div className="flex w-full flex-col gap-2">
-            <p className="text-pretty text-sm text-muted-foreground">
+            <p className="text-pretty text-xs text-muted-foreground lg:text-sm">
               Accede con la cuenta de Techos Rentables
             </p>
             <Button
@@ -320,7 +322,7 @@ export default function LoginPage() {
               variant="outline"
               size="lg"
               className={cn(
-                "h-11 w-full gap-3 rounded-xl border-border bg-background/80 text-foreground shadow-sm",
+                "h-10 w-full gap-3 rounded-xl border-border bg-background/80 text-foreground shadow-sm lg:h-11",
                 "hover:bg-muted/80"
               )}
               disabled={googlePending}
@@ -329,7 +331,7 @@ export default function LoginPage() {
               <GoogleIcon />
               {googlePending ? "Conectando…" : "Continuar con Google"}
             </Button>
-            <p className="mt-4 text-center text-xs leading-none text-muted-foreground">
+            <p className="mt-2 text-center text-xs leading-none text-muted-foreground lg:mt-4">
               <Link
                 href="/privacidad"
                 className="font-medium text-foreground/70 underline decoration-foreground/25 underline-offset-2 transition-colors hover:text-foreground hover:decoration-foreground/50"
@@ -341,21 +343,21 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="mt-8 flex w-full max-w-[400px] items-center justify-center gap-10">
+      <div className="mt-3 flex w-full max-w-[400px] items-center justify-center gap-6 sm:mt-4 sm:gap-6 lg:mt-6 lg:gap-8">
         <Image
           src="/techos-rentables-logo.png"
           alt="Techos Rentables"
           width={220}
           height={88}
-          className="h-24 w-auto object-contain"
+          className="h-12 w-auto object-contain sm:h-12 lg:h-16"
         />
-        <span className="h-14 w-px bg-border/60" />
+        <span className="h-8 w-px bg-border/60 sm:h-8 lg:h-10" />
         <Image
           src="/tinku-logo.svg"
           alt="Tinku"
           width={110}
           height={56}
-          className="h-14 w-auto object-contain"
+          className="h-8 w-auto object-contain sm:h-8 lg:h-10"
         />
       </div>
     </div>
