@@ -3,7 +3,7 @@ import { DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/components/providers/app-providers";
-import { Topbar } from "@/components/layout/topbar";
+import { ConditionalTopbar } from "@/components/layout/conditional-topbar";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -48,7 +48,7 @@ export default function RootLayout({
     >
       <body className="flex h-screen min-h-0 flex-col overflow-hidden">
         <AppProviders>
-          <Topbar />
+          <ConditionalTopbar />
           {children}
         </AppProviders>
       </body>
