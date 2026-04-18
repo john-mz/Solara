@@ -31,22 +31,23 @@ Estas funciones son responsables de garantizar el SLA de < 5 minutos para detecc
 
 ### `pollDeyeTelemetry`
 - **Tipo:** Pub/Sub (Cron)
-- **Frecuencia:** Cada 2 minutos.
+- **Frecuencia:** Cada 1 minuto.
 - **Flujo:** 
   1. Lee Firestore buscando documentos en `devices` donde `brand == 'deye'`.
-  2. Consulta la API de DeyeCloud (`GET /deye/v1.0/device/real_time_data`).
-  3. Guarda los resultados mapeados en `devices/{device_id}/telemetry`.
-  4. Llama al motor de reglas (RuleEngine) para evaluar variables críticas. Si el dispositivo está Offline, o sus Hz/Volts están fuera de rango, registra un documento en la colección `alarms`.
+  2. Consulta la API de DeyeCloud (`POST /v1.0/device/latest`).
+  3. Extrae métricas clave del arreglo `dataList` (como `DailyActiveProduction` para energía).
+  4. Guarda los resultados mapeados en `devices/{device_id}/telemetry`.
+  5. Llama al motor de reglas (RuleEngine) para evaluar variables críticas. Si el dispositivo está Offline, o sus Hz/Volts están fuera de rango, registra un documento en la colección `alarms`.
 
 ### `pollHuaweiTelemetry`
 - **Tipo:** Pub/Sub (Cron)
-- **Frecuencia:** Cada 2 minutos.
-- **Flujo:** Similar a Deye, pero utilizando la API de Huawei FusionSolar (`POST /huawei/thirdData/getDevRealKpi`).
+- **Frecuencia:** Cada 1 minuto.
+- **Flujo:** Similar a Deye, pero utilizando la API de Huawei FusionSolar (`POST /thirdData/getDevRealKpi`), enviando el `devTypeId` almacenado durante el inventario.
 
 ### `pollGrowattTelemetry`
 - **Tipo:** Pub/Sub (Cron)
-- **Frecuencia:** Cada 2 minutos.
-- **Flujo:** Similar a los anteriores, invocando la API de Growatt Server (`GET /growatt/v1/device/inverter/data`).
+- **Frecuencia:** Cada 1 minuto.
+- **Flujo:** Itera sobre las plantas Growatt y consulta la API (`GET /v1/plant/data`) para obtener métricas agregadas por sitio, distribuyéndolas a los dispositivos asociados.
 
 ---
 
