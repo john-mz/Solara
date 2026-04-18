@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -35,6 +36,81 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
+const TYPEWRITER_WORDS = [
+  "monitorizada",
+  "optimizada",
+  "bajo control",
+  "en tiempo real",
+  "siempre activa",
+  "en tus manos",
+] as const;
+
+function useTypewriter() {
+  const [text, setText] = useState<string>(TYPEWRITER_WORDS[0]);
+
+  useEffect(() => {
+    const words = TYPEWRITER_WORDS;
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    let wordIdx = 0;
+    let charIdx = words[0].length;
+    let mode: "pausing" | "deleting" | "typing" = "pausing";
+
+    function schedule(ms: number, fn: () => void) {
+      timeoutId = setTimeout(() => {
+        if (!cancelled) fn();
+      }, ms);
+    }
+
+    function step() {
+      const word = words[wordIdx];
+
+      if (mode === "pausing") {
+        schedule(2200, () => {
+          mode = "deleting";
+          step();
+        });
+      } else if (mode === "deleting") {
+        if (charIdx > 0) {
+          charIdx -= 1;
+          setText(word.slice(0, charIdx));
+          schedule(32, step);
+        } else {
+          wordIdx = (wordIdx + 1) % words.length;
+          mode = "typing";
+          schedule(60, step);
+        }
+      } else {
+        const nextWord = words[wordIdx];
+        if (charIdx < nextWord.length) {
+          charIdx += 1;
+          setText(nextWord.slice(0, charIdx));
+          schedule(58, step);
+        } else {
+          mode = "pausing";
+          schedule(2200, () => {
+            mode = "deleting";
+            step();
+          });
+        }
+      }
+    }
+
+    schedule(2200, () => {
+      mode = "deleting";
+      step();
+    });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+  return text;
+}
+
 function authErrorMessage(code: string): string {
   switch (code) {
     case "auth/popup-closed-by-user":
@@ -52,8 +128,12 @@ function authErrorMessage(code: string): string {
 export default function LoginPage() {
   const { setPlantSession } = useAuth();
   const [plantId, setPlantId] = useState("");
+  const [plantFocused, setPlantFocused] = useState(false);
   const [plantPending, setPlantPending] = useState(false);
   const [googlePending, setGooglePending] = useState(false);
+  const typewriterText = useTypewriter();
+
+  const plantActive = plantFocused || plantId.length > 0;
 
   async function handlePlantSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,10 +175,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
+    <div className="flex flex-1 flex-col items-center justify-center px-6 py-10">
+      <div className="mb-6 flex w-full max-w-[520px] flex-col items-center gap-1 text-center">
+        <h2
+          className={cn(
+            "font-[family-name:var(--font-heading)] text-3xl font-bold tracking-tight text-foreground/90 sm:text-4xl",
+            "flex items-baseline gap-0 whitespace-nowrap leading-tight"
+          )}
+        >
+          <span>Tu energía solar,&nbsp;</span>
+          <span className="text-primary">{typewriterText}</span>
+          <span className="ml-0.5 animate-pulse font-light text-primary/70">|</span>
+        </h2>
+      </div>
+
       <div
         className={cn(
-          "w-full max-w-[400px] rounded-2xl border border-border/60 bg-card/90 p-8 shadow-lg shadow-foreground/5 backdrop-blur-sm",
+          "w-full max-w-[400px] rounded-2xl border border-border/60 bg-card/90 px-8 pb-5 pt-8 shadow-lg shadow-foreground/5 backdrop-blur-sm",
           "ring-1 ring-border/40"
         )}
       >
@@ -131,37 +224,73 @@ export default function LoginPage() {
             className="flex w-full flex-col gap-3 text-left"
           >
             <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="plant-id"
-                className="text-sm font-medium text-foreground"
-              >
-                Número de instalación
-              </label>
-              <input
-                id="plant-id"
-                name="plant-id"
-                type="text"
-                autoComplete="off"
-                placeholder="Ej. 122825 o NE=33685734"
-                value={plantId}
-                onChange={(e) => setPlantId(e.target.value)}
+              <div
                 className={cn(
-                  "h-11 w-full rounded-xl border border-input bg-background/80 px-3 text-sm text-foreground outline-none",
-                  "placeholder:text-muted-foreground",
-                  "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  "relative overflow-hidden rounded-xl border transition-colors duration-300",
+                  plantFocused ? "border-foreground/30" : "border-input"
                 )}
-              />
+              >
+                {/* Diagonal shine sweep on focus */}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "pointer-events-none absolute inset-0 transition-opacity duration-700",
+                    plantFocused ? "opacity-100" : "opacity-0"
+                  )}
+                  style={{
+                    background:
+                      "linear-gradient(to right, transparent 15%, oklch(0.88 0.18 88 / 0.55) 50%, transparent 85%)",
+                    animation: plantFocused
+                      ? "input-shine 5s ease-in-out 0.3s infinite"
+                      : undefined,
+                  }}
+                />
+                <div className="relative bg-background/80 rounded-xl">
+                  <input
+                    id="plant-id"
+                    name="plant-id"
+                    type="text"
+                    autoComplete="off"
+                    placeholder="Ej. 122825 o NE=33685734"
+                    value={plantId}
+                    onChange={(e) => setPlantId(e.target.value)}
+                    onFocus={() => setPlantFocused(true)}
+                    onBlur={() => setPlantFocused(false)}
+                    className={cn(
+                      "h-14 w-full rounded-xl bg-transparent px-3 pb-2 pt-5 text-sm text-foreground outline-none",
+                      "placeholder:text-transparent"
+                    )}
+                  />
+                  <label
+                    htmlFor="plant-id"
+                    className={cn(
+                      "pointer-events-none absolute left-3 origin-left text-sm transition-all duration-200",
+                      plantActive
+                        ? "top-[9px] scale-[0.76] font-medium text-foreground/60"
+                        : "top-1/2 -translate-y-1/2 text-muted-foreground"
+                    )}
+                  >
+                    Número de instalación
+                  </label>
+                </div>
+              </div>
               <p className="text-xs text-muted-foreground">
-                Es el mismo código que aparece en tu contrato o te lo compartió
-                el equipo. Sin contraseña.
+                Es el código que te compartió el equipo de instalación.
               </p>
             </div>
             <Button
               type="submit"
               size="lg"
-              className="h-11 w-full rounded-xl"
+              className="relative h-11 w-full overflow-hidden rounded-xl transition-transform duration-150 hover:scale-[1.02] active:scale-[0.99]"
               disabled={plantPending || !plantId.trim()}
             >
+              {!plantPending && plantId.trim() && (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent"
+                  style={{ animation: "shimmer-sweep 4.5s ease-in-out 0.8s infinite" }}
+                />
+              )}
               {plantPending ? "Verificando…" : "Ingresar a mi instalación"}
             </Button>
           </form>
@@ -176,8 +305,7 @@ export default function LoginPage() {
 
           <div className="flex w-full flex-col gap-2">
             <p className="text-pretty text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Administradores</span>
-              : accede con la cuenta de Google de Techos Rentables.
+              Accede con la cuenta de Techos Rentables
             </p>
             <Button
               type="button"
@@ -193,8 +321,34 @@ export default function LoginPage() {
               <GoogleIcon />
               {googlePending ? "Conectando…" : "Continuar con Google"}
             </Button>
+            <p className="mt-4 text-center text-xs leading-none text-muted-foreground">
+              <Link
+                href="/privacidad"
+                className="font-medium text-foreground/70 underline decoration-foreground/25 underline-offset-2 transition-colors hover:text-foreground hover:decoration-foreground/50"
+              >
+                Política de privacidad
+              </Link>
+            </p>
           </div>
         </div>
+      </div>
+
+      <div className="mt-8 flex w-full max-w-[400px] items-center justify-center gap-10">
+        <Image
+          src="/techos-rentables-logo.png"
+          alt="Techos Rentables"
+          width={220}
+          height={88}
+          className="h-24 w-auto object-contain"
+        />
+        <span className="h-14 w-px bg-border/60" />
+        <Image
+          src="/tinku-logo.svg"
+          alt="Tinku"
+          width={110}
+          height={56}
+          className="h-14 w-auto object-contain"
+        />
       </div>
     </div>
   );
