@@ -117,39 +117,39 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .dark {
-  /* En modo oscuro, el fondo es verde bosque profundo, no negro puro */
-  --background: oklch(0.18 0.03 150);
-  --foreground: oklch(0.96 0.01 150);
-  --card: oklch(0.22 0.04 150);
-  --card-foreground: oklch(0.96 0.01 150);
-  --popover: oklch(0.22 0.04 150);
-  --popover-foreground: oklch(0.96 0.01 150);
+  /* Base azul profunda para el dashboard nocturno */
+  --background: #0a0a1a;
+  --foreground: #eef4ff;
+  --card: #11162a;
+  --card-foreground: #eef4ff;
+  --popover: #11162a;
+  --popover-foreground: #eef4ff;
   
   /* El verde principal se mantiene, brilla muy bien en oscuro */
   --primary: oklch(0.62 0.17 145);
   --primary-foreground: oklch(0.18 0.03 150);
   
   --secondary: oklch(0.85 0.16 95);
-  --secondary-foreground: oklch(0.18 0.03 150);
+  --secondary-foreground: #0a0a1a;
   
-  --muted: oklch(0.28 0.04 150);
-  --muted-foreground: oklch(0.7 0.02 150);
+  --muted: #171f38;
+  --muted-foreground: #98a7c7;
   
-  --accent: oklch(0.28 0.04 150);
-  --accent-foreground: oklch(0.96 0.01 150);
+  --accent: #1b2240;
+  --accent-foreground: #eef4ff;
   
   --destructive: oklch(0.5 0.15 25);
-  --border: oklch(0.28 0.04 150);
-  --input: oklch(0.28 0.04 150);
+  --border: #232b46;
+  --input: #232b46;
   --ring: oklch(0.62 0.17 145);
   
-  --sidebar: oklch(0.18 0.03 150);
-  --sidebar-foreground: oklch(0.96 0.01 150);
+  --sidebar: #0f1427;
+  --sidebar-foreground: #eef4ff;
   --sidebar-primary: oklch(0.62 0.17 145);
-  --sidebar-primary-foreground: oklch(0.18 0.03 150);
-  --sidebar-accent: oklch(0.28 0.04 150);
-  --sidebar-accent-foreground: oklch(0.96 0.01 150);
-  --sidebar-border: oklch(0.28 0.04 150);
+  --sidebar-primary-foreground: #0a0a1a;
+  --sidebar-accent: #171f38;
+  --sidebar-accent-foreground: #eef4ff;
+  --sidebar-border: #232b46;
   --sidebar-ring: oklch(0.62 0.17 145);
 }
 
