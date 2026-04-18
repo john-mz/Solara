@@ -46,7 +46,7 @@ const TYPEWRITER_WORDS = [
 ] as const;
 
 function useTypewriter() {
-  const [text, setText] = useState(TYPEWRITER_WORDS[0]);
+  const [text, setText] = useState<string>(TYPEWRITER_WORDS[0]);
 
   useEffect(() => {
     const words = TYPEWRITER_WORDS;
@@ -275,8 +275,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Es el mismo código que aparece en tu contrato o te lo compartió
-                el equipo. Sin contraseña.
+                Es el código que te compartió el equipo de instalación.
               </p>
             </div>
             <Button
@@ -306,8 +305,7 @@ export default function LoginPage() {
 
           <div className="flex w-full flex-col gap-2">
             <p className="text-pretty text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Administradores</span>
-              : accede con la cuenta de Google de Techos Rentables.
+              Accede con la cuenta de Techos Rentables
             </p>
             <Button
               type="button"
@@ -339,11 +337,11 @@ export default function LoginPage() {
         <Image
           src="/techos-rentables-logo.png"
           alt="Techos Rentables"
-          width={160}
-          height={64}
-          className="h-16 w-auto object-contain"
+          width={220}
+          height={88}
+          className="h-24 w-auto object-contain"
         />
-        <span className="h-10 w-px bg-border/60" />
+        <span className="h-14 w-px bg-border/60" />
         <Image
           src="/tinku-logo.svg"
           alt="Tinku"
