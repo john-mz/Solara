@@ -19,6 +19,8 @@ const PLANT_SESSION_KEY = "solara_plant_session";
 type AuthContextValue = {
   session: AppSession;
   firebaseUser: User | null;
+  /** Firebase Auth ha emitido el primer evento (útil para guards sin redirigir antes de tiempo). */
+  authReady: boolean;
   setPlantSession: (plant: PlantDoc) => void;
   signOut: () => Promise<void>;
 };
@@ -46,14 +48,10 @@ function readPlantFromStorage(): PlantDoc | null {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(() => null);
-  const [plantSession, setPlantSessionState] = useState<PlantDoc | null>(null);
+  const [plantSession, setPlantSessionState] = useState<PlantDoc | null>(
+    () => readPlantFromStorage()
+  );
   const [authReady, setAuthReady] = useState(false);
-
-  // Restaurar sesión de planta tras montar (solo cliente)
-  useEffect(() => {
-    const plant = readPlantFromStorage();
-    if (plant) setPlantSessionState(plant);
-  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -90,10 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       session,
       firebaseUser,
+      authReady,
       setPlantSession,
       signOut,
     }),
-    [session, firebaseUser, setPlantSession, signOut]
+    [session, firebaseUser, authReady, setPlantSession, signOut]
   );
 
   return (
