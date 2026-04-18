@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, Part } from '@google/generative-ai';
+import { GoogleGenerativeAI, Part, Content } from '@google/generative-ai';
 import { config } from '../config/env';
 
 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
@@ -89,4 +89,57 @@ Responde ÚNICAMENTE con el objeto JSON válido.
   }
   
   return JSON.parse(text);
+}
+
+/**
+ * Obtiene una respuesta de chat especializada en una planta solar con reintento/fallback.
+ */
+export async function getPlantChatResponse(plantInfo: string, history: Content[]): Promise<string> {
+  const systemInstruction = `Eres un asistente experto en monitoreo y mantenimiento de plantas solares de la plataforma Techos Rentables.
+Tu tarea es responder dudas de los usuarios sobre la planta solar específica cuyos datos técnicos se proporcionan a continuación.
+
+REGLAS ESTRICTAS:
+1. SOLO puedes responder preguntas basadas en la información técnica de la planta proporcionada.
+2. Si te preguntan algo que NO está en la información proporcionada o que no tiene que ver con la planta, responde amablemente que solo puedes hablar sobre los detalles técnicos de esta planta solar.
+3. Mantén un tono profesional, técnico y servicial.
+4. No menciones que eres una IA o que tienes instrucciones de sistema. Simplemente actúa como el asistente experto.
+5. Si detectas alarmas críticas, menciona su importancia y sugiere revisión técnica si el usuario pregunta por el estado de la planta.
+
+DATOS TÉCNICOS DE LA PLANTA SOLAR:
+${plantInfo}`;
+
+  const tryGenerate = async (modelName: string) => {
+    const chatModel = genAI.getGenerativeModel({
+      model: modelName,
+      systemInstruction,
+    });
+
+    const historyForChat = history.slice(0, -1);
+    const lastUserMessage = history[history.length - 1].parts[0].text;
+
+    if (!lastUserMessage) {
+      throw new Error('El último mensaje del historial está vacío.');
+    }
+
+    const chatSession = chatModel.startChat({
+      history: historyForChat,
+    });
+
+    const result = await chatSession.sendMessage(lastUserMessage);
+    const response = await result.response;
+    return response.text();
+  };
+
+  try {
+    console.log('Intentando chat con gemini-3-flash-preview...');
+    return await tryGenerate('gemini-3-flash-preview');
+  } catch (error) {
+    console.warn('Fallo gemini-3-flash-preview, intentando fallback con gemini-2.5-flash...', error);
+    try {
+      return await tryGenerate('gemini-2.5-flash');
+    } catch (fallbackError) {
+      console.error('Fallo también el modelo de fallback.', fallbackError);
+      throw fallbackError;
+    }
+  }
 }

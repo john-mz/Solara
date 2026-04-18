@@ -104,7 +104,54 @@ curl -X POST "https://us-central1-hackathon-cursor.cloudfunctions.net/analyzeInv
 
 ---
 
-## 5. Instrucciones de Ejecución y Despliegue
+## 5. Agente de Chat Especializado
+
+### `plantChatAgent`
+- **Tipo:** Cloud Function HTTP (`onRequest`)
+- **Método:** `POST`
+- **Endpoint:** `https://<region>-<project-id>.cloudfunctions.net/plantChatAgent`
+- **Descripción:** Agente de IA experto que responde preguntas específicas sobre una planta solar. Recopila automáticamente datos de la planta, dispositivos, telemetría reciente (20 registros) y alarmas activas para contextualizar la respuesta.
+- **Modelo:** `gemini-3-flash-preview` con fallback automático a `gemini-2.5-flash`.
+
+#### Request (Payload)
+```json
+{
+  "id_plant": "mock_deye_1",
+  "historial": [
+    {
+      "role": "user",
+      "parts": [{ "text": "¿Cuál es el estado actual de mi planta?" }]
+    }
+  ]
+}
+```
+
+#### Response (Ejemplo)
+```json
+{
+  "success": true,
+  "response": "Tu planta 'Planta Piloto Deye' se encuentra actualmente ONLINE..."
+}
+```
+
+#### Ejemplo con `curl`
+```bash
+curl -X POST "https://us-central1-hackathon-cursor.cloudfunctions.net/plantChatAgent" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "id_plant": "mock_deye_1",
+       "historial": [
+         {
+           "role": "user",
+           "parts": [{"text": "¿Cómo ha sido la generación de energía hoy?"}]
+         }
+       ]
+     }'
+```
+
+---
+
+## 6. Instrucciones de Ejecución y Despliegue
 
 ### Requisitos Previos
 - Tener instalado Node.js (versión 20 recomendada).
