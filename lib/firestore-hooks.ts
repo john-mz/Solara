@@ -71,7 +71,7 @@ function isPlantBrand(value: unknown): value is PlantBrand {
   return value === "deye" || value === "huawei" || value === "growatt";
 }
 
-function mapPlantDoc(docId: string, data: DocumentData): PlantDoc {
+export function mapPlantDoc(docId: string, data: DocumentData): PlantDoc {
   const brand = data.brand;
   if (!isPlantBrand(brand)) {
     throw new Error("Marca de planta inválida");

@@ -1,5 +1,8 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
+import { illustrationFor } from "@/components/dashboard/plant-dashboard";
 import {
   dashboardBrandBadgeClass,
   dashboardChipDanger,
@@ -82,36 +85,60 @@ export function PlantasGrid({
         const pill = statusPill(uptime);
         const expected =
           p.contract_commitments?.expected_uptime_percent ?? 99.5;
+        const illustration = illustrationFor(p.installed_capacity_kw);
         return (
-          <article
+          <Link
             key={p.id}
-            className={cn(cardPaper, "flex flex-col gap-2 p-4")}
+            href={`/dashboard/plantas/${p.id}`}
+            className={cn(
+              cardPaper,
+              "group flex flex-col gap-2 p-4 transition-colors hover:border-white/30 hover:bg-white/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            )}
           >
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={cn(
-                  "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide",
-                  dashboardBrandBadgeClass(p.brand)
-                )}
-              >
-                {p.brand}
-              </span>
-              <span
-                className={cn(
-                  "rounded-full px-2 py-0.5 text-[0.65rem] font-medium",
-                  pill.className
-                )}
-              >
-                {pill.label}
-              </span>
+            {/* Top row: badges + thumbnail */}
+            <div className="flex items-start gap-3">
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide",
+                      dashboardBrandBadgeClass(p.brand)
+                    )}
+                  >
+                    {p.brand}
+                  </span>
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[0.65rem] font-medium",
+                      pill.className
+                    )}
+                  >
+                    {pill.label}
+                  </span>
+                </div>
+                <h2 className="font-[family-name:var(--font-heading)] text-base font-semibold text-foreground">
+                  {p.name}
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  {p.location} · {metricFormatter.format(p.installed_capacity_kw)} kW
+                </p>
+              </div>
+
+              {/* Illustration thumbnail */}
+              <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-[var(--radius-lg)] bg-white/5">
+                <div className="absolute inset-0 [mask-image:linear-gradient(to_top,transparent_0%,black_60%)]">
+                  <Image
+                    src={illustration.src}
+                    alt={illustration.alt}
+                    fill
+                    className="object-contain object-bottom p-1 transition-transform duration-300 group-hover:scale-105"
+                    sizes="128px"
+                  />
+                </div>
+              </div>
             </div>
-            <h2 className="font-[family-name:var(--font-heading)] text-base font-semibold text-foreground">
-              {p.name}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              {p.location} · {metricFormatter.format(p.installed_capacity_kw)} kW
-            </p>
-            <div className="grid grid-cols-2 gap-2 border-t border-white/15 pt-2 text-xs">
+
+            <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
               <div>
                 <span className="text-muted-foreground">Uptime hoy</span>
                 <p className="font-semibold tabular-nums text-foreground">
@@ -133,7 +160,7 @@ export function PlantasGrid({
                 ? ` · ${metricFormatter.format(p.contract_commitments.expected_energy_kwh_month)} kWh/mes`
                 : ""}
             </p>
-          </article>
+          </Link>
         );
       })}
     </div>
