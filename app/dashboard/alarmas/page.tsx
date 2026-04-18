@@ -49,6 +49,9 @@ export default function AlarmasPage() {
   }, [plantsQuery.data]);
 
   const alarms = flattenAlarmPages(alarmsQuery.data);
+  const alarmsErrorMessage = alarmsQuery.isError
+    ? "No se pudieron cargar las alarmas. Verifica los indices de Firestore para esta consulta."
+    : undefined;
 
   return (
     <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-5 pb-5">
@@ -117,6 +120,7 @@ export default function AlarmasPage() {
           alarms={alarms}
           plantNameById={plantNameById}
           isLoading={alarmsQuery.isLoading}
+          errorMessage={alarmsErrorMessage}
           hasNextPage={alarmsQuery.hasNextPage}
           isFetchingNextPage={alarmsQuery.isFetchingNextPage}
           onLoadMore={() => alarmsQuery.fetchNextPage()}

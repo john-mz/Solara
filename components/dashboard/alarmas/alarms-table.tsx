@@ -27,6 +27,7 @@ export type AlarmsTableProps = {
   alarms: AlarmDoc[];
   plantNameById: Map<string, string>;
   isLoading: boolean;
+  errorMessage?: string;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
@@ -36,6 +37,7 @@ export function AlarmsTable({
   alarms,
   plantNameById,
   isLoading,
+  errorMessage,
   hasNextPage,
   isFetchingNextPage,
   onLoadMore,
@@ -64,6 +66,12 @@ export function AlarmsTable({
               <tr>
                 <td colSpan={6} className="px-2 py-8 text-center text-muted-foreground">
                   Cargando alarmas...
+                </td>
+              </tr>
+            ) : errorMessage ? (
+              <tr>
+                <td colSpan={6} className="px-2 py-8 text-center text-destructive">
+                  {errorMessage}
                 </td>
               </tr>
             ) : alarms.length === 0 ? (
