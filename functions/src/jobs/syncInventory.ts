@@ -12,30 +12,30 @@ export async function runSyncInventory() {
   // --- 1. Sincronizar Deye ---
   try {
     const deyePlantsRes = await DeyeApi.getPlants();
-    const deyePlants = deyePlantsRes.stationList || deyePlantsRes.data?.list || [];
+    const deyePlants = deyePlantsRes.stationList || [];
     for (const p of deyePlants) {
       const plantId = `deye_${p.id}`;
       batch.set(Collections.plants.doc(plantId), {
         original_plant_id: String(p.id),
         brand: 'deye',
         name: p.name || 'Planta Deye',
-        location: p.locationAddress || p.location || '',
-        installed_capacity_kw: p.installedCapacity || p.capacity || 0,
+        location: p.locationAddress || '',
+        installed_capacity_kw: p.installedCapacity || 0,
         created_at: new Date()
       }, { merge: true });
       hasChanges = true;
 
       // Dispositivos Deye
       const deyeDevicesRes = await DeyeApi.getDevices(String(p.id));
-      const deyeDevices = deyeDevicesRes.deviceList || deyeDevicesRes.data?.list || [];
+      const deyeDevices = deyeDevicesRes.deviceListItems || [];
       for (const d of deyeDevices) {
-        const deviceId = `deye_${d.device_sn}`;
+        const deviceId = `deye_${d.deviceSn}`;
         batch.set(Collections.devices.doc(deviceId), {
           plant_id: plantId,
-          original_id: d.device_sn,
+          original_id: d.deviceSn,
           brand: 'deye',
-          type: d.device_type === 1 ? 'inverter' : 'microinverter',
-          model: d.device_model || '',
+          type: d.deviceType === 'INVERTER' ? 'inverter' : 'collector',
+          model: d.productId || '',
           last_sync_metadata: new Date()
         }, { merge: true });
       }
@@ -47,21 +47,21 @@ export async function runSyncInventory() {
   // --- 2. Sincronizar Huawei ---
   try {
     const huaweiPlantsRes = await HuaweiApi.getPlants();
-    const huaweiPlants = huaweiPlantsRes.data || [];
+    const huaweiPlants = huaweiPlantsRes.data?.list || [];
     for (const p of huaweiPlants) {
-      const plantId = `huawei_${p.stationCode}`;
+      const plantId = `huawei_${p.plantCode}`;
       batch.set(Collections.plants.doc(plantId), {
-        original_plant_id: p.stationCode,
+        original_plant_id: p.plantCode,
         brand: 'huawei',
-        name: p.stationName || 'Planta Huawei',
-        location: p.stationAddress || '',
+        name: p.plantName || 'Planta Huawei',
+        location: p.plantAddress || '',
         installed_capacity_kw: p.capacity || 0,
         created_at: new Date()
       }, { merge: true });
       hasChanges = true;
 
       // Dispositivos Huawei
-      const huaweiDevicesRes = await HuaweiApi.getDevices(p.stationCode);
+      const huaweiDevicesRes = await HuaweiApi.getDevices(p.plantCode);
       const huaweiDevices = huaweiDevicesRes.data || [];
       for (const d of huaweiDevices) {
         const deviceId = `huawei_${d.id}`;
@@ -70,7 +70,8 @@ export async function runSyncInventory() {
           original_id: String(d.id),
           brand: 'huawei',
           type: 'inverter',
-          model: d.devName || '',
+          devTypeId: d.devTypeId, // Importante para getRealTimeData
+          model: d.model || d.invType || '',
           last_sync_metadata: new Date()
         }, { merge: true });
       }
@@ -84,28 +85,28 @@ export async function runSyncInventory() {
     const growattPlantsRes = await GrowattApi.getPlants();
     const growattPlants = growattPlantsRes.data?.plants || [];
     for (const p of growattPlants) {
-      const plantId = `growatt_${p.plantId}`;
+      const plantId = `growatt_${p.plant_id}`;
       batch.set(Collections.plants.doc(plantId), {
-        original_plant_id: String(p.plantId),
+        original_plant_id: String(p.plant_id),
         brand: 'growatt',
-        name: p.plantName || 'Planta Growatt',
-        location: p.city || '',
-        installed_capacity_kw: p.nominalPower || 0,
+        name: p.name || 'Planta Growatt',
+        location: `${p.city || ''}, ${p.country || ''}`,
+        installed_capacity_kw: p.peak_power || 0,
         created_at: new Date()
       }, { merge: true });
       hasChanges = true;
 
       // Dispositivos Growatt
-      const growattDevicesRes = await GrowattApi.getDevices(p.plantId);
+      const growattDevicesRes = await GrowattApi.getDevices(String(p.plant_id));
       const growattDevices = growattDevicesRes.data?.devices || [];
       for (const d of growattDevices) {
-        const deviceId = `growatt_${d.deviceSn}`;
+        const deviceId = `growatt_${d.device_sn}`;
         batch.set(Collections.devices.doc(deviceId), {
           plant_id: plantId,
-          original_id: d.deviceSn,
+          original_id: d.device_sn,
           brand: 'growatt',
           type: 'inverter',
-          model: d.deviceType || '',
+          model: d.model || '',
           last_sync_metadata: new Date()
         }, { merge: true });
       }
