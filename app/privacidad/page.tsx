@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-gradient-to-br from-background via-muted/30 to-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="mb-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
