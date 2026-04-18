@@ -1,189 +1,446 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale/es";
 import { motion } from "framer-motion";
-import { useTheme } from "next-themes";
+import Image from "next/image";
 import { toast } from "sonner";
 import { EnergyChart } from "@/components/dashboard/energy-chart";
 import { Button } from "@/components/ui/button";
-import { getMockSolarOverview } from "@/lib/mock-solar-data";
+import {
+  getMockFleetOverview,
+  getMockSolarOverview,
+  type Alarm,
+  type Plant,
+} from "@/lib/mock-solar-data";
+import { cn } from "@/lib/utils";
+
+const cardPaper =
+  "border border-white/18 bg-white/10 shadow-[0_2px_18px_rgb(0,0,0,0.035)] backdrop-blur-md rounded-[var(--radius-xl)]";
 
 const metricFormatter = new Intl.NumberFormat("es-PE", {
   maximumFractionDigits: 1,
 });
 
-type MetricCardProps = {
-  label: string;
-  value: string;
-  helper: string;
-};
+const copFormatter = new Intl.NumberFormat("es-CO", {
+  style: "currency",
+  currency: "COP",
+  maximumFractionDigits: 0,
+});
 
-function MetricCard({ label, value, helper }: MetricCardProps) {
-  return (
-    <div className="rounded-4xl border border-border bg-card/90 p-5 shadow-sm backdrop-blur">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight text-card-foreground">
-        {value}
-      </p>
-      <p className="mt-2 text-sm text-muted-foreground">{helper}</p>
-    </div>
-  );
+const co2Formatter = new Intl.NumberFormat("es-CO", {
+  maximumFractionDigits: 3,
+});
+
+function brandBadgeClass(brand: Plant["brand"]) {
+  switch (brand) {
+    case "deye":
+      return "bg-amber-500/15 text-amber-800 dark:text-amber-300 ring-1 ring-amber-500/35";
+    case "huawei":
+      return "bg-red-500/10 text-red-800 dark:text-red-300 ring-1 ring-red-500/30";
+    case "growatt":
+      return "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-500/30";
+    default:
+      return "bg-muted text-muted-foreground ring-1 ring-border";
+  }
+}
+
+function statusLabel(status: Plant["status"]) {
+  switch (status) {
+    case "ONLINE":
+      return "En linea";
+    case "OFFLINE":
+      return "Fuera de linea";
+    case "WARNING":
+      return "Advertencia";
+    default:
+      return status;
+  }
+}
+
+function statusPillClass(status: Plant["status"]) {
+  switch (status) {
+    case "ONLINE":
+      return "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300";
+    case "OFFLINE":
+      return "bg-muted text-muted-foreground";
+    case "WARNING":
+      return "bg-amber-500/15 text-amber-800 dark:text-amber-300";
+    default:
+      return "bg-muted";
+  }
+}
+
+function alarmTypeLabel(type: Alarm["type"]) {
+  switch (type) {
+    case "DEVICE_OFFLINE":
+      return "Dispositivo offline";
+    case "FREQUENCY_OUT_OF_RANGE":
+      return "Frecuencia fuera de rango";
+    case "VOLTAGE_OUT_OF_RANGE":
+      return "Voltaje fuera de rango";
+    case "LOW_GENERATION":
+      return "Baja generacion";
+    default:
+      return type;
+  }
 }
 
 export function OverviewDashboard() {
-  const { resolvedTheme, setTheme } = useTheme();
   const { data, isFetching, refetch } = useQuery({
     queryKey: ["solar-overview"],
     queryFn: getMockSolarOverview,
     refetchInterval: 60_000,
   });
 
-  const isDark = resolvedTheme === "dark";
+  const fleetQuery = useQuery({
+    queryKey: ["fleet-overview"],
+    queryFn: getMockFleetOverview,
+    refetchInterval: 60_000,
+  });
 
   async function handleManualRefresh() {
-    const result = await refetch();
-
-    if (result.data) {
+    const [solarResult, fleetResult] = await Promise.all([
+      refetch(),
+      fleetQuery.refetch(),
+    ]);
+    if (solarResult.data && fleetResult.data) {
       toast.success("Telemetria sincronizada", {
-        description: `Ultima actualizacion ${format(
-          new Date(result.data.updatedAt),
-          "HH:mm:ss"
-        )}`,
+        description: `Ultima actualizacion ${format(new Date(solarResult.data.updatedAt), "HH:mm:ss")}`,
       });
       return;
     }
-
     toast.error("No se pudo actualizar la telemetria");
   }
 
-  if (!data) {
+  const fleet = fleetQuery.data;
+  const isLoadingFleet = fleetQuery.isLoading;
+
+  if (!data || !fleet || isLoadingFleet) {
     return (
-      <main className="flex min-h-full flex-1 items-center justify-center px-6 py-16">
-        <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-4xl border border-border bg-card px-6 py-5 text-sm text-muted-foreground shadow-sm"
-          initial={{ opacity: 0, y: 12 }}
+      <main className="flex min-h-0 flex-1 items-center justify-center overflow-hidden px-5">
+        <motion.p
+          animate={{ opacity: 1 }}
+          className="text-sm text-muted-foreground"
+          initial={{ opacity: 0 }}
         >
-          Cargando dashboard base...
-        </motion.div>
+          Cargando...
+        </motion.p>
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-full flex-1 px-6 py-10">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <motion.section
+    <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pb-5">
+      {/* Page header — title + actions, between topbar and grid */}
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        className="flex shrink-0 items-end justify-between gap-4 py-4"
+        initial={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div>
+          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-primary/70">
+            Solar Power Report
+          </p>
+          <h1 className="mt-0.5 font-[family-name:var(--font-heading)] text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            {data.siteName}
+          </h1>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <p className="text-xs text-muted-foreground">
+            {format(new Date(data.updatedAt), "dd MMM yyyy · HH:mm")}
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={isFetching || fleetQuery.isFetching}
+            onClick={handleManualRefresh}
+          >
+            {isFetching || fleetQuery.isFetching
+              ? "Sincronizando..."
+              : "Sincronizar"}
+          </Button>
+        </div>
+      </motion.div>
+
+      <div className="grid min-h-0 flex-1 w-full grid-cols-[1fr_1.5fr_1fr] grid-rows-2 gap-3">
+        {/* Card A — metrics */}
+        <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-[2rem] border border-border bg-card/80 p-6 shadow-sm backdrop-blur"
-          initial={{ opacity: 0, y: 16 }}
-          transition={{ duration: 0.45 }}
+          className={cn(
+            cardPaper,
+            "flex min-h-0 min-w-0 flex-col justify-between gap-3 p-4"
+          )}
+          initial={{ opacity: 0, y: 8 }}
+          transition={{ duration: 0.35 }}
         >
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="grid min-h-0 grid-cols-3 gap-2 text-xs sm:text-sm">
             <div>
-              <p className="text-sm font-medium uppercase tracking-[0.24em] text-primary">
-                Solara control center
-              </p>
-              <h1 className="mt-3 text-4xl font-semibold tracking-tight text-card-foreground">
-                {data.siteName}
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-                Base inicial para monitoreo solar con modo oscuro, polling de datos,
-                notificaciones y visualizacion de rendimiento horario.
+              <p className="text-muted-foreground">Potencia</p>
+              <p className="mt-0.5 font-semibold tabular-nums text-foreground">
+                {metricFormatter.format(data.currentPowerKw)}{" "}
+                <span className="font-normal text-muted-foreground">kW</span>
               </p>
             </div>
-
-            <div className="flex flex-wrap gap-3">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setTheme(isDark ? "light" : "dark")}
-              >
-                {isDark ? "Cambiar a claro" : "Cambiar a oscuro"}
-              </Button>
-              <Button size="sm" onClick={handleManualRefresh}>
-                {isFetching ? "Sincronizando..." : "Sincronizar ahora"}
-              </Button>
+            <div>
+              <p className="text-muted-foreground">Diaria</p>
+              <p className="mt-0.5 font-semibold tabular-nums text-foreground">
+                {metricFormatter.format(data.dailyGenerationKwh)}{" "}
+                <span className="font-normal text-muted-foreground">kWh</span>
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Eficiencia</p>
+              <p className="mt-0.5 font-semibold tabular-nums text-foreground">
+                {metricFormatter.format(data.efficiency)}
+                <span className="font-normal text-muted-foreground"> %</span>
+              </p>
             </div>
           </div>
+          <p className="text-[0.7rem] text-muted-foreground">
+            {data.status === "online"
+              ? "Operacion estable"
+              : "Dos inversores con latencia"}
+          </p>
+        </motion.div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
-              Polling cada 60 s con React Query
-            </span>
-            <span className="rounded-full bg-muted px-3 py-1">
-              Ultima lectura {format(new Date(data.updatedAt), "HH:mm:ss")}
-            </span>
-            <motion.span
-              animate={{ opacity: [0.65, 1, 0.65], scale: [1, 1.03, 1] }}
-              className="rounded-full bg-destructive/12 px-3 py-1 text-destructive"
-              transition={{ duration: 1.8, repeat: Number.POSITIVE_INFINITY }}
-            >
-              {data.activeAlerts} alertas activas
-            </motion.span>
-          </div>
-        </motion.section>
-
-        <section className="grid gap-4 md:grid-cols-3">
-          <motion.div
-            animate={{ opacity: 1, y: 0 }}
-            initial={{ opacity: 0, y: 14 }}
-            transition={{ delay: 0.05, duration: 0.35 }}
-          >
-            <MetricCard
-              helper="Potencia instantanea reportada por el middleware"
-              label="Potencia actual"
-              value={`${metricFormatter.format(data.currentPowerKw)} kW`}
-            />
-          </motion.div>
-          <motion.div
-            animate={{ opacity: 1, y: 0 }}
-            initial={{ opacity: 0, y: 14 }}
-            transition={{ delay: 0.1, duration: 0.35 }}
-          >
-            <MetricCard
-              helper="Energia acumulada durante la jornada"
-              label="Generacion diaria"
-              value={`${metricFormatter.format(data.dailyGenerationKwh)} kWh`}
-            />
-          </motion.div>
-          <motion.div
-            animate={{ opacity: 1, y: 0 }}
-            initial={{ opacity: 0, y: 14 }}
-            transition={{ delay: 0.15, duration: 0.35 }}
-          >
-            <MetricCard
-              helper={data.status === "online" ? "Operacion estable" : "Dos inversores con latencia"}
-              label="Eficiencia"
-              value={`${metricFormatter.format(data.efficiency)}%`}
-            />
-          </motion.div>
-        </section>
-
-        <motion.section
+        {/* Center top — floating house image (no card) */}
+        <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-[2rem] border border-border bg-card/80 p-6 shadow-sm backdrop-blur"
-          initial={{ opacity: 0, y: 18 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
+          className="relative flex min-h-0 min-w-0 flex-col"
+          initial={{ opacity: 0, y: 8 }}
+          transition={{ duration: 0.35, delay: 0.05 }}
         >
-          <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight">
-                Generacion horaria
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                `recharts` queda listo para reemplazar este mock por tu endpoint
-                real sin tocar el componente visual.
-              </p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Fecha de muestra {format(new Date(data.updatedAt), "dd/MM/yyyy")}
+          {/* image with bottom fade */}
+          <div className="relative min-h-0 flex-1 [mask-image:linear-gradient(to_top,transparent_0%,black_55%)]">
+            <Image
+              src="/casacolonial-paneles.png"
+              alt="Vivienda con paneles solares"
+              fill
+              className="object-contain object-bottom"
+              priority
+              sizes="(max-width: 768px) 100vw, 40vw"
+            />
+          </div>
+          {/* site label */}
+          <div className="shrink-0 pb-1 text-center">
+            <p className="font-[family-name:var(--font-heading)] text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-foreground/40">
+              {data.siteName}
             </p>
           </div>
+        </motion.div>
 
-          <EnergyChart points={data.points} />
-        </motion.section>
+        {/* Card C — environmental + fleet kW */}
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className={cn(
+            cardPaper,
+            "flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden p-4"
+          )}
+          initial={{ opacity: 0, y: 8 }}
+          transition={{ duration: 0.35, delay: 0.08 }}
+        >
+          <h2 className="shrink-0 text-sm font-semibold tracking-tight text-foreground">
+            Impacto y capacidad
+          </h2>
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1 text-sm scrollbar-hide">
+            <div>
+              <p className="text-muted-foreground">CO2 mitigado (hoy)</p>
+              <p className="mt-0.5 text-lg font-semibold tabular-nums tracking-tight text-foreground sm:text-xl">
+                {co2Formatter.format(fleet.totalCo2Tons)}{" "}
+                <span className="text-sm font-normal text-muted-foreground">
+                  t
+                </span>
+              </p>
+              <p className="mt-0.5 text-[0.65rem] text-muted-foreground">
+                ~0.4 kg CO2 / kWh
+              </p>
+            </div>
+            <div className="border-t border-white/20 pt-3">
+              <p className="text-muted-foreground">Ahorro estimado</p>
+              <p className="mt-0.5 text-base font-semibold tabular-nums tracking-tight text-foreground sm:text-lg">
+                {copFormatter.format(fleet.totalFinancialSavings)}
+              </p>
+              <p className="mt-0.5 text-[0.65rem] text-muted-foreground">
+                ~500 COP / kWh
+              </p>
+            </div>
+            <div className="border-t border-white/20 pt-3">
+              <p className="text-muted-foreground">Capacidad instalada</p>
+              <p className="mt-0.5 font-semibold tabular-nums text-foreground">
+                {metricFormatter.format(fleet.totalInstalledKw)}{" "}
+                <span className="font-normal text-muted-foreground">kW</span>
+              </p>
+              <p className="mt-1 text-[0.65rem] text-muted-foreground">
+                {fleet.plants.length} plantas · energia hoy{" "}
+                {metricFormatter.format(fleet.totalEnergyTodayKwh)} kWh
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Card B — plants list */}
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className={cn(
+            cardPaper,
+            "flex min-h-0 min-w-0 flex-col gap-2 overflow-hidden p-4"
+          )}
+          initial={{ opacity: 0, y: 8 }}
+          transition={{ duration: 0.35, delay: 0.1 }}
+          aria-labelledby="plants-heading"
+        >
+          <h2
+            id="plants-heading"
+            className="shrink-0 text-sm font-semibold tracking-tight text-foreground"
+          >
+            Plantas
+          </h2>
+          <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 scrollbar-hide">
+            {fleet.plants.map((plant) => (
+              <li
+                key={plant.id}
+                className="rounded-[var(--radius-lg)] border border-white/18 bg-white/[0.07] px-2.5 py-2 backdrop-blur-sm"
+              >
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide",
+                      brandBadgeClass(plant.brand)
+                    )}
+                  >
+                    {plant.brand}
+                  </span>
+                  <span
+                    className={cn(
+                      "rounded-full px-1.5 py-0.5 text-[0.65rem] font-medium",
+                      statusPillClass(plant.status)
+                    )}
+                  >
+                    {statusLabel(plant.status)}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs font-semibold text-foreground sm:text-sm">
+                  {plant.name}
+                </p>
+                <p className="text-[0.7rem] text-muted-foreground">
+                  {plant.location} · {plant.installed_capacity_kw} kW
+                </p>
+                <div className="mt-1.5 grid grid-cols-2 gap-2 text-[0.7rem]">
+                  <div>
+                    <span className="text-muted-foreground">Hoy</span>
+                    <span className="ml-1 font-semibold tabular-nums text-foreground">
+                      {metricFormatter.format(plant.energy_today_kwh)} kWh
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Uptime</span>
+                    <span className="ml-1 font-semibold tabular-nums text-foreground">
+                      {metricFormatter.format(plant.avg_uptime_percent)}%
+                    </span>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="shrink-0 text-[0.65rem] text-muted-foreground">
+            Flota actualizada {format(new Date(fleet.updatedAt), "HH:mm:ss")}
+          </p>
+        </motion.div>
+
+        {/* Card E — chart */}
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className={cn(
+            cardPaper,
+            "flex min-h-0 min-w-0 flex-col gap-2 overflow-hidden p-4"
+          )}
+          initial={{ opacity: 0, y: 8 }}
+          transition={{ duration: 0.35, delay: 0.12 }}
+        >
+          <div className="flex shrink-0 flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-sm font-semibold tracking-tight text-foreground">
+              Generacion horaria
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {format(new Date(data.updatedAt), "dd/MM/yyyy")}
+            </p>
+          </div>
+          <div className="min-h-0 flex-1">
+            <EnergyChart points={data.points} />
+          </div>
+        </motion.div>
+
+        {/* Card D — alarms */}
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className={cn(
+            cardPaper,
+            "flex min-h-0 min-w-0 flex-col gap-2 overflow-hidden p-4"
+          )}
+          initial={{ opacity: 0, y: 8 }}
+          transition={{ duration: 0.35, delay: 0.14 }}
+          aria-labelledby="alarms-heading"
+        >
+          <div className="flex shrink-0 flex-wrap items-baseline justify-between gap-2">
+            <h2
+              id="alarms-heading"
+              className="text-sm font-semibold tracking-tight text-foreground"
+            >
+              Alarmas activas
+            </h2>
+            <span className="text-[0.7rem] text-muted-foreground">
+              {fleet.activeAlarms.length} en{" "}
+              <code className="rounded bg-white/15 px-1 text-[0.65rem] backdrop-blur-sm">
+                alarms
+              </code>
+            </span>
+          </div>
+          <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 scrollbar-hide">
+            {fleet.activeAlarms.map((alarm) => (
+              <li
+                key={alarm.id}
+                className="rounded-[var(--radius-lg)] border border-white/18 bg-white/[0.08] px-2.5 py-2 backdrop-blur-sm"
+              >
+                <div className="flex gap-2">
+                  <span
+                    className={cn(
+                      "mt-1 size-1.5 shrink-0 rounded-full",
+                      alarm.severity === "CRITICAL"
+                        ? "bg-destructive"
+                        : "bg-amber-500"
+                    )}
+                    aria-hidden
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5 gap-y-0.5">
+                      <span className="text-xs font-medium text-foreground">
+                        {alarmTypeLabel(alarm.type)}
+                      </span>
+                      <span className="rounded-md bg-white/16 px-1 py-0.5 text-[0.6rem] font-medium text-muted-foreground backdrop-blur-sm">
+                        {alarm.severity}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 line-clamp-2 text-[0.7rem] text-muted-foreground">
+                      {alarm.description}
+                    </p>
+                    <p className="mt-1 font-mono text-[0.6rem] text-muted-foreground">
+                      {alarm.device_id}
+                    </p>
+                    <p className="text-[0.6rem] text-muted-foreground">
+                      {formatDistanceToNow(new Date(alarm.created_at), {
+                        addSuffix: true,
+                        locale: es,
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
       </div>
     </main>
   );

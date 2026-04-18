@@ -2,15 +2,13 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-muted-foreground: #71717a; /* Mantenemos este gris pero se ajustará por oklch abajo */
+  --color-muted-foreground: var(--muted-foreground);
   --font-sans: var(--font-sans);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  --font-heading: var(--font-heading); /* Añadí esto para usar dos fuentes */
+  --font-heading: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,14 +46,17 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-muted-foreground: oklch(0.7 0.02 150); /* Ajustado al tono verde */
-  }
-}
-
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
+  background-color: #e2e2e2;
+  background-image: linear-gradient(
+    to bottom,
+    #e2e2e2 0%,
+    #e5e4db 38%,
+    #e7e1c8 72%,
+    #eae0be 100%
+  );
+  color: var(--foreground);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -63,94 +64,39 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 :root {
-  /* Fondo crema muy suave, texto verde bosque ultra oscuro */
-  --background: oklch(0.975 0.01 90);
-  --foreground: oklch(0.22 0.04 150);
-  
-  /* Tarjetas blancas puras para que destaquen del fondo crema */
+  --background: oklch(0.97 0.015 85);
+  --foreground: oklch(0.22 0.03 60);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.04 150);
+  --card-foreground: oklch(0.22 0.03 60);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.04 150);
-  
-  /* Verde vibrante para acciones principales (botones) */
-  --primary: oklch(0.62 0.17 145);
-  --primary-foreground: oklch(0.98 0 0);
-  
-  /* Amarillo brillante para elementos secundarios/alertas */
-  --secondary: oklch(0.85 0.16 95);
-  --secondary-foreground: oklch(0.22 0.04 150);
-  
-  /* Gris verdoso claro para hover states y fondos sutiles */
-  --muted: oklch(0.92 0.02 150);
-  --muted-foreground: oklch(0.5 0.03 150);
-  
-  /* Verde esmeralda oscuro para acentos (como el botón "Environment") */
-  --accent: oklch(0.35 0.08 150);
-  --accent-foreground: oklch(0.98 0 0);
-  
-  /* Rojo ajustado para no desentonar con los tonos tierra/verdes */
-  --destructive: oklch(0.6 0.15 25);
+  --popover-foreground: oklch(0.22 0.03 60);
+  --primary: oklch(0.82 0.17 88);
+  --primary-foreground: oklch(0.27 0.04 58);
+  --secondary: oklch(0.88 0.04 75);
+  --secondary-foreground: oklch(0.28 0.03 60);
+  --muted: oklch(0.93 0.01 85);
+  --muted-foreground: oklch(0.5 0.02 62);
+  --accent: oklch(0.65 0.13 75);
+  --accent-foreground: oklch(0.98 0.01 95);
+  --destructive: oklch(0.62 0.18 35);
   --destructive-foreground: oklch(0.98 0 0);
-  
-  --border: oklch(0.88 0.02 150);
-  --input: oklch(0.88 0.02 150);
-  --ring: oklch(0.62 0.17 145);
-  
-  /* Colores para gráficas de energía (Verde, Amarillo, Azul, Naranja, Bosque) */
-  --chart-1: oklch(0.62 0.17 145);
-  --chart-2: oklch(0.85 0.16 95);
-  --chart-3: oklch(0.65 0.12 240);
-  --chart-4: oklch(0.7 0.15 50);
-  --chart-5: oklch(0.35 0.08 150);
-  
-  --radius: 1rem; /* Más redondeado por defecto */
-  
-  --sidebar: oklch(0.975 0.01 90);
-  --sidebar-foreground: oklch(0.22 0.04 150);
-  --sidebar-primary: oklch(0.62 0.17 145);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.92 0.02 150);
-  --sidebar-accent-foreground: oklch(0.22 0.04 150);
-  --sidebar-border: oklch(0.88 0.02 150);
-  --sidebar-ring: oklch(0.62 0.17 145);
-}
-
-.dark {
-  /* Base azul profunda para el dashboard nocturno */
-  --background: #0a0a1a;
-  --foreground: #eef4ff;
-  --card: #11162a;
-  --card-foreground: #eef4ff;
-  --popover: #11162a;
-  --popover-foreground: #eef4ff;
-  
-  /* El verde principal se mantiene, brilla muy bien en oscuro */
-  --primary: oklch(0.62 0.17 145);
-  --primary-foreground: oklch(0.18 0.03 150);
-  
-  --secondary: oklch(0.85 0.16 95);
-  --secondary-foreground: #0a0a1a;
-  
-  --muted: #171f38;
-  --muted-foreground: #98a7c7;
-  
-  --accent: #1b2240;
-  --accent-foreground: #eef4ff;
-  
-  --destructive: oklch(0.5 0.15 25);
-  --border: #232b46;
-  --input: #232b46;
-  --ring: oklch(0.62 0.17 145);
-  
-  --sidebar: #0f1427;
-  --sidebar-foreground: #eef4ff;
-  --sidebar-primary: oklch(0.62 0.17 145);
-  --sidebar-primary-foreground: #0a0a1a;
-  --sidebar-accent: #171f38;
-  --sidebar-accent-foreground: #eef4ff;
-  --sidebar-border: #232b46;
-  --sidebar-ring: oklch(0.62 0.17 145);
+  --border: oklch(0.9 0.02 85);
+  --input: oklch(0.9 0.02 85);
+  --ring: oklch(0.82 0.17 88);
+  --chart-1: oklch(0.82 0.17 88);
+  --chart-2: oklch(0.65 0.08 60);
+  --chart-3: oklch(0.78 0.06 92);
+  --chart-4: oklch(0.72 0.12 72);
+  --chart-5: oklch(0.58 0.04 55);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.97 0.015 85);
+  --sidebar-foreground: oklch(0.22 0.03 60);
+  --sidebar-primary: oklch(0.82 0.17 88);
+  --sidebar-primary-foreground: oklch(0.27 0.04 58);
+  --sidebar-accent: oklch(0.93 0.01 85);
+  --sidebar-accent-foreground: oklch(0.22 0.03 60);
+  --sidebar-border: oklch(0.9 0.02 85);
+  --sidebar-ring: oklch(0.82 0.17 88);
 }
 
 @layer base {
@@ -158,9 +104,19 @@ h1, h2, h3, h4, h5, h6 {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
   html {
-    @apply font-sans;
+    @apply bg-background font-sans;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

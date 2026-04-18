@@ -11,12 +11,14 @@ import {
   YAxis,
 } from "recharts";
 import type { SolarPoint } from "@/lib/mock-solar-data";
+import { cn } from "@/lib/utils";
 
 type EnergyChartProps = {
   points: SolarPoint[];
+  className?: string;
 };
 
-export function EnergyChart({ points }: EnergyChartProps) {
+export function EnergyChart({ points, className }: EnergyChartProps) {
   const formatTooltipValue = (
     value: string | number | readonly (string | number)[] | undefined
   ) => {
@@ -29,7 +31,7 @@ export function EnergyChart({ points }: EnergyChartProps) {
   };
 
   return (
-    <div className="h-72 w-full">
+    <div className={cn("h-full min-h-[7rem] w-full min-w-0", className)}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={points} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
           <defs>
@@ -57,7 +59,7 @@ export function EnergyChart({ points }: EnergyChartProps) {
           <Tooltip
             contentStyle={{
               border: "1px solid var(--color-border)",
-              borderRadius: "1rem",
+              borderRadius: "var(--radius-xl)",
               background: "var(--color-card)",
               color: "var(--color-card-foreground)",
             }}

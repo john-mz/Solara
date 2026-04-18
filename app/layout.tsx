@@ -3,6 +3,7 @@ import { DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/components/providers/app-providers";
+import { Topbar } from "@/components/layout/topbar";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -27,17 +28,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      suppressHydrationWarning
       className={cn(
-        "h-full",
+        "h-full min-h-0",
         "antialiased",
         dmSans.variable,
         plusJakartaSans.variable,
-        "font-sans"
+        "bg-background font-sans"
       )}
     >
-      <body className="min-h-full flex flex-col">
-        <AppProviders>{children}</AppProviders>
+      <body className="flex h-screen min-h-0 flex-col overflow-hidden">
+        <AppProviders>
+          <Topbar />
+          {children}
+        </AppProviders>
       </body>
     </html>
   );
