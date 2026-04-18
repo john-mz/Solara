@@ -36,6 +36,7 @@ export type RangoTarifa = {
 };
 
 export type AnalyzeInvoiceData = {
+  name?: string;
   total_factura: string;
   total_energia: string;
   rangos: RangoTarifa[];
@@ -173,28 +174,38 @@ export function computeQuoteFromConsumo(
   };
 }
 
-/** Animated progress bar that fills to 88% over PROGRESS_FILL_MS, then snaps to 100% */
+const PROGRESS_STEPS = [
+  { label: "Descargando factura", threshold: 25 },
+  { label: "Extrayendo datos", threshold: 55 },
+  { label: "Calculando consumo", threshold: 78 },
+  { label: "Generando cotización", threshold: 95 },
+];
+
+/** Animated progress bar driven by elapsed time so the displayed % and step label stay in sync */
 function ProgressBar({ loading, done }: { loading: boolean; done: boolean }) {
   const [pct, setPct] = useState(0);
 
   useEffect(() => {
     if (!loading && !done) { setPct(0); return; }
     if (done) { setPct(100); return; }
-    // kick off: first set 0, then on next frame jump toward 88%
+
+    const start = Date.now();
     setPct(0);
-    const id = setTimeout(() => setPct(88), 60);
-    return () => clearTimeout(id);
+
+    const id = setInterval(() => {
+      const elapsed = Date.now() - start;
+      // Approach 88% asymptotically over PROGRESS_FILL_MS
+      const next = Math.min(88, (elapsed / PROGRESS_FILL_MS) * 88);
+      setPct(next);
+      if (next >= 88) clearInterval(id);
+    }, 250);
+
+    return () => clearInterval(id);
   }, [loading, done]);
 
   if (pct === 0 && !loading && !done) return null;
 
-  const steps = [
-    { label: "Descargando factura", threshold: 25 },
-    { label: "Extrayendo datos", threshold: 55 },
-    { label: "Calculando consumo", threshold: 78 },
-    { label: "Generando cotización", threshold: 95 },
-  ];
-  const currentStep = steps.filter((s) => pct >= s.threshold).at(-1);
+  const currentStep = PROGRESS_STEPS.filter((s) => pct >= s.threshold).at(-1);
 
   return (
     <motion.div
@@ -205,21 +216,19 @@ function ProgressBar({ loading, done }: { loading: boolean; done: boolean }) {
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium text-foreground/90">
-          {done
-            ? "¡Listo!"
-            : (currentStep?.label ?? "Iniciando análisis…")}
+          {done ? "¡Listo!" : (currentStep?.label ?? "Iniciando análisis…")}
         </span>
         <span className="text-xs tabular-nums text-muted-foreground">{Math.round(pct)}%</span>
       </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-primary transition-all ease-linear"
-            style={{
-              width: `${pct}%`,
-              transitionDuration: done ? "300ms" : `${PROGRESS_FILL_MS}ms`,
-            }}
-          />
-        </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+        <div
+          className="h-full rounded-full bg-primary transition-[width] ease-linear"
+          style={{
+            width: `${pct}%`,
+            transitionDuration: done ? "300ms" : "300ms",
+          }}
+        />
+      </div>
       {!done && (
         <p className="text-[0.65rem] text-muted-foreground">
           Esto suele tardar ~20 segundos mientras descargamos y analizamos su factura.
@@ -500,13 +509,23 @@ export function CotizacionPanel() {
           transition={{ duration: 0.3 }}
           className="flex flex-col gap-4"
         >
-          {/* Execution time */}
-          {response?.execution_time_ms != null && (
-            <p className="text-[0.65rem] text-muted-foreground">
-              Tiempo de análisis: {(response.execution_time_ms / 1000).toFixed(1)} s ·
-              Factura: {data.total_factura} · Energía: {data.total_energia}
-            </p>
-          )}
+          {/* Client name + execution meta */}
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            {data.name && (
+              <p className="text-sm font-medium text-muted-foreground">
+                Cliente:{" "}
+                <span className="font-[family-name:var(--font-heading)] text-xl font-bold tracking-tight text-primary sm:text-2xl">
+                  {data.name}
+                </span>
+              </p>
+            )}
+            {response?.execution_time_ms != null && (
+              <p className="text-[0.65rem] text-muted-foreground">
+                Tiempo de análisis: {(response.execution_time_ms / 1000).toFixed(1)} s ·
+                Factura: {data.total_factura} · Energía: {data.total_energia}
+              </p>
+            )}
+          </div>
 
           {/* ── Card 1: Diagnóstico + Sistema ── */}
           <section className={CARD} aria-labelledby="diag-heading">
