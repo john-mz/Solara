@@ -12,7 +12,7 @@ import {
   type DocumentData,
 } from "firebase/firestore";
 import { auth, db } from "./firebase";
-import type { PlantBrand, PlantDoc } from "./types";
+import type { ContractCommitments, PlantBrand, PlantDoc } from "./types";
 
 export async function signInWithGoogle() {
   const provider = new GoogleAuthProvider();
@@ -27,11 +27,35 @@ function isPlantBrand(value: unknown): value is PlantBrand {
   return value === "deye" || value === "huawei" || value === "growatt";
 }
 
+function mapContractCommitments(
+  raw: unknown
+): ContractCommitments | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const m = raw as Record<string, unknown>;
+  return {
+    expected_energy_kwh_month:
+      typeof m.expected_energy_kwh_month === "number"
+        ? m.expected_energy_kwh_month
+        : undefined,
+    expected_uptime_percent:
+      typeof m.expected_uptime_percent === "number"
+        ? m.expected_uptime_percent
+        : undefined,
+    target_pr: typeof m.target_pr === "number" ? m.target_pr : undefined,
+  };
+}
+
 function mapPlantDoc(docId: string, data: DocumentData): PlantDoc {
   const brand = data.brand;
   if (!isPlantBrand(brand)) {
     throw new Error("Documento de planta con marca inválida.");
   }
+  const commitments = mapContractCommitments(data.contract_commitments);
+  const hasCommitments =
+    commitments &&
+    (commitments.expected_energy_kwh_month != null ||
+      commitments.expected_uptime_percent != null ||
+      commitments.target_pr != null);
   return {
     id: docId,
     original_plant_id: String(data.original_plant_id ?? ""),
@@ -39,6 +63,7 @@ function mapPlantDoc(docId: string, data: DocumentData): PlantDoc {
     brand,
     location: String(data.location ?? ""),
     installed_capacity_kw: Number(data.installed_capacity_kw ?? 0),
+    ...(hasCommitments ? { contract_commitments: commitments } : {}),
   };
 }
 
