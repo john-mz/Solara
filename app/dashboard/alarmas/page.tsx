@@ -65,7 +65,7 @@ export default function AlarmasPage() {
         initial={{ opacity: 0, y: -6 }}
         transition={{ duration: 0.3 }}
       >
-        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-primary/70">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-foreground/70">
           Operación
         </p>
         <h1 className="font-[family-name:var(--font-heading)] text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
