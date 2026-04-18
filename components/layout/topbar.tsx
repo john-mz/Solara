@@ -26,6 +26,7 @@ const OWNER_NAV = [
   { href: "/dashboard/alarmas", label: "Alarmas" },
   { href: "/dashboard/plantas", label: "Plantas" },
   { href: "/dashboard/reportes", label: "Reportes" },
+  { href: "/dashboard/cotizaciones", label: "Cotizaciones" },
 ] as const;
 
 const PLANT_NAV = [{ href: "/", label: "Panel" }] as const;
