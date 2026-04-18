@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -132,11 +133,18 @@ export function Topbar() {
                 className={cn(
                   "relative rounded-lg px-6 py-2.5 text-base font-medium transition-colors",
                   active
-                    ? "bg-gradient-to-br from-[color-mix(in_oklch,var(--primary),white_9%)] to-[color-mix(in_oklch,var(--primary),black_7%)] text-primary-foreground shadow-sm"
+                    ? "text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {item.label}
+                {active ? (
+                  <motion.span
+                    layoutId="nav-pill"
+                    className="absolute inset-0 rounded-lg bg-gradient-to-br from-[color-mix(in_oklch,var(--primary),white_9%)] to-[color-mix(in_oklch,var(--primary),black_7%)] shadow-sm"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  />
+                ) : null}
+                <span className="relative z-10">{item.label}</span>
               </Link>
             );
           })}
