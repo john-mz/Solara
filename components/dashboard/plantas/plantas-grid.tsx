@@ -58,7 +58,7 @@ export function PlantasGrid({
 }: PlantasGridProps) {
   if (isLoading) {
     return (
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pb-2 sm:grid-cols-2 lg:grid-cols-3 scrollbar-hide">
+      <div className="grid grid-cols-1 gap-3 pb-2 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
@@ -78,7 +78,7 @@ export function PlantasGrid({
   }
 
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pb-2 sm:grid-cols-2 lg:grid-cols-3 scrollbar-hide">
+    <div className="grid grid-cols-1 gap-3 pb-2 sm:grid-cols-2 lg:grid-cols-3">
       {plants.map((p) => {
         const s = summaryByPlantId.get(p.id);
         const uptime = s?.avg_uptime_percent;
