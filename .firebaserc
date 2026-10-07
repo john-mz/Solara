@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "hackathon-cursor"
-  }
+    "default": "solara-stiven-dev"
+  },
+  "targets": {},
+  "etags": {}
 }

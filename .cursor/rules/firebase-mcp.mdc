@@ -5,8 +5,9 @@ alwaysApply: true
 
 # Firebase MCP Access
 
-The Firebase MCP server (`user-firebase`) is enabled for this project.  
-Active project: **hackathon-cursor** (alias: `default`).
+The Firebase MCP server (`plugin-firebase-firebase`) is enabled for this project.  
+Active project: **solara-stiven-dev** (alias: `default`).  
+Signed-in account: `johnstiven40@gmail.com`. The previous project `hackathon-cursor` is not accessible from this account.
 
 ## How to use it
 
@@ -33,5 +34,5 @@ If `Authenticated User` is `<NONE>`, call `firebase_login` so the user can authe
 ## Firestore specifics
 
 - To read current security rules: call `firebase_get_security_rules` with `type: "firestore"`.
-- Firestore is **not yet initialized** in `firebase.json` — run `firebase_init` to add it.
-- The Firestore SDK is also **not yet imported** in `lib/firebase.ts` (only Auth is set up).
+- Firestore and Google Sign-In are configured in `firebase.json`. The web SDK config lives in `lib/firebase.ts`.
+- The client reads Firestore without sesión de Firebase en el rol de planta. Las reglas permiten lectura pública y solo actualizan alarmas si hay un usuario autenticado.

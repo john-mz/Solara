@@ -1,5 +1,8 @@
 {
   "firestore": {
+    "database": "(default)",
+    "location": "southamerica-east1",
+    "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
   "functions": [
@@ -19,5 +22,20 @@
         "npm --prefix \"$RESOURCE_DIR\" run build"
       ]
     }
-  ]
+  ],
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Solara",
+        "supportEmail": "johnstiven40@gmail.com"
+      }
+    },
+    "authorizedDomains": [
+      "localhost",
+      "127.0.0.1",
+      "192.168.1.7",
+      "solara-stiven-dev.firebaseapp.com",
+      "solara-stiven-dev.web.app"
+    ]
+  }
 }
