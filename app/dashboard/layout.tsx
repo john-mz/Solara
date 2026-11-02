@@ -17,12 +17,12 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!authReady) return;
-    if (session?.role !== "owner") {
+    if (session?.role !== "owner" && session?.role !== "guest") {
       router.replace("/login");
     }
   }, [authReady, session, router]);
 
-  if (!authReady || session?.role !== "owner") {
+  if (!authReady || (session?.role !== "owner" && session?.role !== "guest")) {
     return (
       <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-5 pb-20 sm:pb-5">
         <div className="flex shrink-0 flex-col gap-2 py-3 sm:py-4">

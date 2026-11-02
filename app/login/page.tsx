@@ -127,7 +127,7 @@ function authErrorMessage(code: string): string {
 }
 
 export default function LoginPage() {
-  const { session, authReady, setPlantSession } = useAuth();
+  const { session, authReady, setPlantSession, enterAsGuest } = useAuth();
   const router = useRouter();
   const [plantId, setPlantId] = useState("");
   const [plantFocused, setPlantFocused] = useState(false);
@@ -137,7 +137,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authReady) return;
-    if (session?.role === "owner") {
+    if (session?.role === "owner" || session?.role === "guest") {
       router.replace("/dashboard");
     } else if (session?.role === "plant") {
       router.replace("/");
@@ -333,6 +333,15 @@ export default function LoginPage() {
             >
               <GoogleIcon />
               {googlePending ? "Conectando…" : "Continuar con Google"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="lg"
+              className="h-10 w-full rounded-xl text-muted-foreground hover:text-foreground lg:h-11"
+              onClick={() => void enterAsGuest()}
+            >
+              Entrar como invitado
             </Button>
             <p className="mt-2 text-center text-xs leading-none text-muted-foreground lg:mt-4">
               <Link

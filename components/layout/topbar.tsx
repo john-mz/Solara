@@ -122,7 +122,9 @@ export function Topbar() {
   const [signingOut, setSigningOut] = useState(false);
   const alarmCount = activeAlarms.length;
   const alarmsHref =
-    session?.role === "owner" ? "/dashboard/alarmas" : "/";
+    session?.role === "owner" || session?.role === "guest"
+      ? "/dashboard/alarmas"
+      : "/";
 
   const navItems = session?.role === "plant" ? PLANT_NAV : OWNER_NAV;
   const logoHref = session?.role === "plant" ? "/" : "/dashboard/alarmas";
@@ -134,7 +136,9 @@ export function Topbar() {
          "Owner")
       : session?.role === "plant"
         ? session.plant.name
-        : null;
+        : session?.role === "guest"
+          ? "Invitado"
+          : null;
 
   const avatarUrl =
     session?.role === "owner" ? session.firebaseUser.photoURL : null;

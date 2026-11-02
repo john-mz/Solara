@@ -15,6 +15,7 @@ import { signOutFirebase } from "@/lib/auth";
 import type { AppSession, PlantDoc } from "@/lib/types";
 
 const PLANT_SESSION_KEY = "solara_plant_session";
+const GUEST_SESSION_KEY = "solara_guest_session";
 
 type AuthContextValue = {
   session: AppSession;
@@ -22,6 +23,7 @@ type AuthContextValue = {
   /** Firebase Auth ha emitido el primer evento (útil para guards sin redirigir antes de tiempo). */
   authReady: boolean;
   setPlantSession: (plant: PlantDoc) => void;
+  enterAsGuest: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -49,11 +51,17 @@ function readPlantFromStorage(): PlantDoc | null {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(() => null);
   const [plantSession, setPlantSessionState] = useState<PlantDoc | null>(null);
+  const [guestSession, setGuestSessionState] = useState(false);
   const [authReady, setAuthReady] = useState(false);
 
-  /** Hydrate plant session after mount so SSR and first client render match (avoids hydration mismatch). */
+  /** Hydrate plant/guest session after mount so SSR and first client render match (avoids hydration mismatch). */
   useEffect(() => {
     setPlantSessionState(readPlantFromStorage());
+    try {
+      setGuestSessionState(sessionStorage.getItem(GUEST_SESSION_KEY) === "1");
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   useEffect(() => {
@@ -61,7 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setFirebaseUser(user);
       if (user) {
         sessionStorage.removeItem(PLANT_SESSION_KEY);
+        sessionStorage.removeItem(GUEST_SESSION_KEY);
         setPlantSessionState(null);
+        setGuestSessionState(false);
       }
       setAuthReady(true);
     });
@@ -70,22 +80,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setPlantSession = useCallback(async (plant: PlantDoc) => {
     await signOutFirebase();
+    sessionStorage.removeItem(GUEST_SESSION_KEY);
+    setGuestSessionState(false);
     sessionStorage.setItem(PLANT_SESSION_KEY, JSON.stringify(plant));
     setPlantSessionState(plant);
+  }, []);
+
+  const enterAsGuest = useCallback(async () => {
+    await signOutFirebase();
+    sessionStorage.removeItem(PLANT_SESSION_KEY);
+    setPlantSessionState(null);
+    sessionStorage.setItem(GUEST_SESSION_KEY, "1");
+    setGuestSessionState(true);
   }, []);
 
   const signOut = useCallback(async () => {
     await signOutFirebase();
     sessionStorage.removeItem(PLANT_SESSION_KEY);
+    sessionStorage.removeItem(GUEST_SESSION_KEY);
     setPlantSessionState(null);
+    setGuestSessionState(false);
   }, []);
 
   const session: AppSession = useMemo(() => {
     if (firebaseUser) return { role: "owner", firebaseUser };
+    if (guestSession) return { role: "guest" };
     if (plantSession) return { role: "plant", plant: plantSession };
-    if (!authReady) return null;
     return null;
-  }, [authReady, firebaseUser, plantSession]);
+  }, [firebaseUser, guestSession, plantSession]);
 
   const value = useMemo(
     () => ({
@@ -93,9 +115,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       firebaseUser,
       authReady,
       setPlantSession,
+      enterAsGuest,
       signOut,
     }),
-    [session, firebaseUser, authReady, setPlantSession, signOut]
+    [session, firebaseUser, authReady, setPlantSession, enterAsGuest, signOut]
   );
 
   return (

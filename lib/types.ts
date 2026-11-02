@@ -87,4 +87,5 @@ export interface PlantDoc {
 export type AppSession =
   | { role: "owner"; firebaseUser: User }
   | { role: "plant"; plant: PlantDoc }
+  | { role: "guest" }
   | null;

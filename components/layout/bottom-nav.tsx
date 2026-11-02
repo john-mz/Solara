@@ -92,7 +92,7 @@ export function BottomNav() {
   const pathname = usePathname();
   const { session } = useAuth();
 
-  if (session?.role !== "owner") {
+  if (session?.role !== "owner" && session?.role !== "guest") {
     return null;
   }
 
