@@ -12,7 +12,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!authReady) return;
-    if (session?.role === "owner") {
+    if (session?.role === "owner" || session?.role === "guest") {
       router.replace("/dashboard/alarmas");
     }
   }, [authReady, session, router]);
@@ -27,6 +27,7 @@ export default function Home() {
   if (
     !authReady ||
     session?.role === "owner" ||
+    session?.role === "guest" ||
     session === null
   ) {
     return (

@@ -457,7 +457,7 @@ export function CotizacionPanel() {
             type="text"
             inputMode="numeric"
             autoComplete="off"
-            placeholder="Ej. 1847440"
+            placeholder="Ej. 184770"
             value={matricula}
             onChange={(e) => setMatricula(e.target.value)}
             disabled={loading}
